@@ -4,7 +4,9 @@ import React, { useState } from 'react'
 import { Card } from '../../../components/Card'
 import { Board } from '../../../components/Board'
 import { PlayerHand } from '../../../components/PlayerHand'
+import { ScoreBoard } from '../../../components/ScoreBoard'
 import { createCard } from '../../../engine/card'
+import { createPlayer } from '../../../engine/player'
 import { type Board as BoardType } from '../../../engine/board'
 import { type Card as CardType } from '../../../engine/card'
 
@@ -177,9 +179,47 @@ export default function ComponentsDevPage() {
         </div>
       </section>
 
-      <section className="mb-12 opacity-50">
+      {/* ScoreBoard Component */}
+      <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">ScoreBoard Component</h2>
-        <p className="text-gray-600">Coming soon...</p>
+        
+        <div className="space-y-8">
+          {/* Normal scoreboard */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Game in Progress</h3>
+            <ScoreBoard
+              players={[
+                { ...createPlayer('Alice', 0), penaltyCards: [createCard(10), createCard(20)] }, // 6 points
+                { ...createPlayer('Bob', 1), penaltyCards: [createCard(55)] }, // 7 points
+                { ...createPlayer('Charlie', 2), penaltyCards: [] }, // 0 points (leader)
+                { ...createPlayer('Diana', 3), penaltyCards: [createCard(5), createCard(15), createCard(25)] }, // 6 points
+              ]}
+              currentPlayerIndex={1}
+              currentRound={3}
+            />
+          </div>
+
+          {/* Sorted scoreboard with warnings */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Sorted by Score (with Warnings)</h3>
+            <ScoreBoard
+              players={[
+                { ...createPlayer('Alice', 0), penaltyCards: Array(62).fill(createCard(1)) }, // 62 points (warning)
+                { ...createPlayer('Bob', 1), penaltyCards: [createCard(10), createCard(20)] }, // 6 points
+                { ...createPlayer('Charlie', 2), penaltyCards: [createCard(5)] }, // 2 points (leader)
+                { ...createPlayer('Diana', 3), penaltyCards: Array(30).fill(createCard(1)) }, // 30 points
+              ]}
+              sortByScore={true}
+              currentRound={5}
+            />
+          </div>
+
+          {/* Empty scoreboard */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Empty Scoreboard</h3>
+            <ScoreBoard players={[]} />
+          </div>
+        </div>
       </section>
     </div>
   )
