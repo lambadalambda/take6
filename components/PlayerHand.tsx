@@ -105,13 +105,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 key={`${card.number}-${index}`}
                 className={`
                   absolute transition-all duration-200 animate-breathe
-                  ${isSelected ? '-translate-y-8 z-50' : 'hover:-translate-y-4 hover:z-40'}
+                  ${isSelected ? '-translate-y-8' : 'hover:-translate-y-4'}
                 `}
                 style={{
                   ...cardStyle,
                   left: `calc(50% + ${(index - (totalCards - 1) / 2) * spacing}px)`,
                   marginLeft: '-61.6px', // Half of scaled card width (w-28 * 1.1 = 123.2px)
-                  '--base-transform': cardStyle.transform
+                  '--base-transform': cardStyle.transform,
+                  zIndex: isSelected ? 100 : cardStyle.zIndex
                 } as React.CSSProperties}
               >
                 <div className="scale-110">
