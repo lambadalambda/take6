@@ -2,20 +2,20 @@ import React from 'react'
 import { type Card as CardType } from '../engine/card'
 import { Card } from './Card'
 
-// Add breathing animation styles with 3D tilt
+// Add breathing animation styles with 3D tilt - more exaggerated movement
 const breathingStyles = `
   @keyframes breathe {
     0%, 100% {
       transform: var(--base-transform) translateY(0px) rotateX(0deg) rotateY(0deg);
     }
     25% {
-      transform: var(--base-transform) translateY(-2px) rotateX(2deg) rotateY(-1deg);
+      transform: var(--base-transform) translateY(-6px) rotateX(5deg) rotateY(-3deg);
     }
     50% {
-      transform: var(--base-transform) translateY(0px) rotateX(-1deg) rotateY(1deg);
+      transform: var(--base-transform) translateY(0px) rotateX(-3deg) rotateY(3deg);
     }
     75% {
-      transform: var(--base-transform) translateY(2px) rotateX(-2deg) rotateY(-1deg);
+      transform: var(--base-transform) translateY(5px) rotateX(-5deg) rotateY(-3deg);
     }
   }
   
