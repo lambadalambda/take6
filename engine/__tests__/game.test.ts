@@ -110,7 +110,22 @@ describe('Game functions', () => {
 
     it('should check if all players are ready', () => {
       const game = createGame({ playerNames: ['Alice', 'Bob', 'Charlie', 'Diana'] })
-      const initialized = initializeRound(game)
+      let initialized = initializeRound(game)
+      
+      // Set up controlled state to avoid randomness
+      initialized = {
+        ...initialized,
+        board: [
+          [createCard(10)],
+          [createCard(20)],
+          [createCard(30)],
+          [createCard(40)]
+        ],
+        players: initialized.players.map((p, i) => ({
+          ...p,
+          hand: [createCard(50 + i * 5), ...p.hand.slice(1)]
+        }))
+      }
       
       expect(getAllPlayersReady(initialized)).toBe(false)
       
@@ -128,7 +143,22 @@ describe('Game functions', () => {
   describe('Round resolution', () => {
     it('should resolve a round when all players have selected', () => {
       const game = createGame({ playerNames: ['Alice', 'Bob', 'Charlie', 'Diana'] })
-      const initialized = initializeRound(game)
+      let initialized = initializeRound(game)
+      
+      // Set up a controlled board state to avoid randomness issues
+      initialized = {
+        ...initialized,
+        board: [
+          [createCard(10)],
+          [createCard(20)],
+          [createCard(30)],
+          [createCard(40)]
+        ],
+        players: initialized.players.map((p, i) => ({
+          ...p,
+          hand: [createCard(50 + i * 5), ...p.hand.slice(1)]  // Ensure cards are higher than board
+        }))
+      }
       
       // Have all players select cards
       let current = initialized
