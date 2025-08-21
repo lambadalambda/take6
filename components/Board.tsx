@@ -15,7 +15,7 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
   }
 
   return (
-    <div data-testid="board" className={`space-y-3 px-12 ${className}`.trim()}>
+    <div data-testid="board" className={`space-y-2 px-12 ${className}`.trim()}>
       {board.map((row, rowIndex) => {
         const isFull = row.length === MAX_CARDS_PER_ROW
         const bullHeadTotal = calculateRowBullHeads(row)
@@ -44,7 +44,7 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
             <div className="flex gap-2">
               {/* Render existing cards */}
               {row.map((card, cardIndex) => (
-                <Card key={`${rowIndex}-${cardIndex}`} card={card} />
+                <Card key={`${rowIndex}-${cardIndex}`} card={card} size="small" />
               ))}
               
               {/* Render empty slots */}
@@ -52,7 +52,7 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
                 <div
                   key={`empty-${i}`}
                   data-testid="empty-slot"
-                  className="border-2 border-dashed border-white/20 rounded-lg w-28 h-40 flex items-center justify-center backdrop-blur-sm"
+                  className="border-2 border-dashed border-white/20 rounded-lg w-20 h-28 flex items-center justify-center backdrop-blur-sm"
                 >
                   <span className="text-white/20 text-xs">•</span>
                 </div>

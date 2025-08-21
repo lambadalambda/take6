@@ -6,6 +6,7 @@ export type CardProps = {
   onClick?: (card: CardType) => void
   selected?: boolean
   disabled?: boolean
+  size?: 'normal' | 'small'
   className?: string
 }
 
@@ -14,6 +15,7 @@ export const Card: React.FC<CardProps> = ({
   onClick, 
   selected = false, 
   disabled = false,
+  size = 'normal',
   className = ''
 }) => {
   const handleClick = () => {
@@ -38,7 +40,8 @@ export const Card: React.FC<CardProps> = ({
     }
   }
 
-  const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800 rounded-lg shadow-md transition-all w-28 h-40`
+  const sizeClasses = size === 'small' ? 'w-20 h-28' : 'w-28 h-40'
+  const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800 rounded-lg shadow-md transition-all ${sizeClasses}`
   const interactiveClasses = onClick && !disabled ? 'cursor-pointer hover:shadow-lg hover:scale-105' : ''
   const selectedClasses = selected ? 'ring-4 ring-blue-500' : ''
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : ''
@@ -64,17 +67,17 @@ export const Card: React.FC<CardProps> = ({
       onClick={handleClick}
     >
       {/* Corner numbers */}
-      <div className="absolute top-1 left-1 text-xs font-bold -rotate-45">{card.number}</div>
-      <div className="absolute top-1 right-1 text-xs font-bold rotate-45">{card.number}</div>
-      <div className="absolute bottom-1 left-1 text-xs font-bold rotate-45">{card.number}</div>
-      <div className="absolute bottom-1 right-1 text-xs font-bold -rotate-45">{card.number}</div>
+      <div className={`absolute top-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold -rotate-45`}>{card.number}</div>
+      <div className={`absolute top-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold rotate-45`}>{card.number}</div>
+      <div className={`absolute bottom-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold rotate-45`}>{card.number}</div>
+      <div className={`absolute bottom-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold -rotate-45`}>{card.number}</div>
       
       {/* Bull head points at top - multiple rows if needed */}
-      <div className="absolute top-3 left-0 right-0 px-2">
+      <div className={`absolute ${size === 'small' ? 'top-2' : 'top-3'} left-0 right-0 ${size === 'small' ? 'px-1' : 'px-2'}`}>
         {bullHeadRows.map((count, rowIndex) => (
           <div key={rowIndex} className="flex justify-center gap-0.5">
             {Array.from({ length: count }).map((_, i) => (
-              <span key={`${rowIndex}-${i}`} data-testid="bull-head" className="text-xs">
+              <span key={`${rowIndex}-${i}`} data-testid="bull-head" className={size === 'small' ? 'text-[10px]' : 'text-xs'}>
                 🐮
               </span>
             ))}
@@ -85,12 +88,12 @@ export const Card: React.FC<CardProps> = ({
       {/* Center content */}
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Larger, more visible cow background */}
-        <div className="absolute text-8xl opacity-30">
+        <div className={`absolute ${size === 'small' ? 'text-5xl' : 'text-8xl'} opacity-30`}>
           🐮
         </div>
         {/* Card number with impact-style border and color based on bull heads */}
         <div 
-          className={`relative text-4xl font-black z-10 ${
+          className={`relative ${size === 'small' ? 'text-2xl' : 'text-4xl'} font-black z-10 ${
             card.bullHeads === 7 ? 'text-red-600' :
             card.bullHeads === 5 ? 'text-red-500' :
             card.bullHeads === 3 ? 'text-yellow-600' :

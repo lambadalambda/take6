@@ -77,23 +77,13 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     <>
       <style dangerouslySetInnerHTML={{ __html: breathingStyles }} />
       <div data-testid="player-hand" className={`${className}`.trim()}>
-        {/* Header */}
-      <div className="flex justify-between items-center mb-3">
-        <h3 className="text-lg font-semibold text-white/80">
-          {playerName ? `${playerName}'s Hand${isAI ? ' (AI)' : ''}` : 'Your Hand'}
-        </h3>
-        <span className="text-sm text-white/60">
-          {cards.length > 0 ? `${cards.length} cards` : ''}
-        </span>
-      </div>
-
       {/* Cards */}
       {cards.length === 0 ? (
         <div className="text-white/40 text-center py-8">
           No cards in hand
         </div>
       ) : (
-        <div className="relative flex justify-center items-end h-44 overflow-visible card-container">
+        <div className="relative flex justify-center items-end h-40 overflow-visible card-container">
           {sortedCards.map((card, index) => {
             const isSelected = selectedCard?.number === card.number
             const cardStyle = getCardStyle(index, sortedCards.length)

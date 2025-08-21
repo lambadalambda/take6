@@ -132,7 +132,7 @@ export default function GamePage() {
   return (
     <div className="h-screen bg-gradient-to-b from-green-800 to-green-900 overflow-hidden flex flex-col">
       {/* Compact Header */}
-      <div className="flex justify-between items-center px-6 py-2 text-white">
+      <div className="h-12 flex justify-between items-center px-6 text-white">
         <h1 className="text-xl font-bold">6 nimmt!</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm">Round {currentRoundNumber}</span>
@@ -144,15 +144,15 @@ export default function GamePage() {
         </div>
       </div>
 
-      {/* Main Game Area - Fixed height instead of flex-1 */}
-      <div className="h-[60vh] flex gap-4 px-6">
+      {/* Main Game Area - Takes available space between header and player hand */}
+      <div className="flex-1 flex gap-4 px-6 py-2">
         {/* Board Area - Center/Left */}
         <div className="flex-1 flex items-center justify-center">
           <Board board={game.board} className="w-full max-w-5xl" />
         </div>
         
         {/* Side Panel - Right */}
-        <div className="w-80 flex flex-col gap-3 py-4">
+        <div className="w-80 flex flex-col gap-3">
           <ScoreBoard 
             players={game.players} 
             currentPlayerIndex={0}
@@ -161,7 +161,7 @@ export default function GamePage() {
           />
           <GameLog 
             entries={logEntries} 
-            className="flex-1 bg-white/10 backdrop-blur text-white max-h-[50vh] overflow-y-auto"
+            className="flex-1 bg-white/10 backdrop-blur text-white overflow-y-auto"
           />
         </div>
       </div>
@@ -190,8 +190,8 @@ export default function GamePage() {
           </div>
         )}
 
-      {/* Player Hand Area - Bottom - Takes remaining space */}
-      <div className="flex-1 px-6 pb-2 flex flex-col justify-center">
+      {/* Player Hand Area - Bottom - Fixed height */}
+      <div className="h-56 px-6 pb-2">
         <PlayerHand
           cards={humanPlayer.hand}
           selectedCard={selectedCard}
