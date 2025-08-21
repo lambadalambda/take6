@@ -14,7 +14,7 @@ import { type Card } from '../engine/card'
 import { createSmartBot, selectCardForSmartBot } from '../ai/smartBot'
 import { type LogEntry } from '../components/GameLog'
 
-export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'resolving' | 'gameOver'
+export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'revealing' | 'resolving' | 'gameOver'
 
 export type RowSelectionState = {
   playerIndex: number
@@ -105,7 +105,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ 
       game: updatedGame, 
       selectedCard: null,
-      gamePhase: 'resolving'
+      gamePhase: 'revealing'
     })
   },
   
@@ -142,7 +142,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       game: finalGame,
       rowSelection: null,
       selectedCard: null,
-      gamePhase: 'selecting'
+      gamePhase: 'revealing'
     })
   },
   

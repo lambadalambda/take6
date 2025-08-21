@@ -6,6 +6,7 @@ import { Board } from '../components/Board'
 import { PlayerHand } from '../components/PlayerHand'
 import { ScoreBoard } from '../components/ScoreBoard'
 import { GameLog } from '../components/GameLog'
+import { CardRevealOverlay } from '../components/CardRevealOverlay'
 import { type Card } from '../engine/card'
 
 export default function GamePage() {
@@ -139,6 +140,7 @@ export default function GamePage() {
           <span className="text-xs px-2 py-1 bg-white/20 rounded-full">
             {gamePhase === 'selecting' && 'Select a card'}
             {gamePhase === 'selectingRow' && 'Select a row to take'}
+            {gamePhase === 'revealing' && 'Revealing cards...'}
             {gamePhase === 'resolving' && 'Resolving...'}
           </span>
         </div>
@@ -165,6 +167,18 @@ export default function GamePage() {
           />
         </div>
       </div>
+
+        {/* Card Reveal Overlay */}
+        {gamePhase === 'revealing' && game && game.playerSelections.length > 0 && (
+          <CardRevealOverlay
+            selections={game.playerSelections}
+            playerNames={game.players.map(p => p.name)}
+            board={game.board}
+            onComplete={() => {
+              useGameStore.setState({ gamePhase: 'resolving' })
+            }}
+          />
+        )}
 
         {/* Row Selection Modal */}
         {showRowSelection && rowSelection && (
