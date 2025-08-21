@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+.*.swp
+.*.swo
+*.bak
+*.tmp
+
+# IDE files
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS generated files
+Thumbs.db
+desktop.ini
