@@ -129,9 +129,108 @@ export default function GamePage() {
   }
 
   return (
-    <div className="h-screen bg-gradient-to-b from-green-800 to-green-900 overflow-hidden flex flex-col">
+    <div className="h-screen bg-gradient-to-b from-green-800 to-green-900 overflow-hidden flex flex-col relative">
+      {/* Lava lamp background effect */}
+      <div className="absolute inset-0 overflow-hidden">
+        <style dangerouslySetInnerHTML={{ __html: `
+          @keyframes lavaFloat1 {
+            0%, 100% {
+              transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+            33% {
+              transform: translate(30px, -30px) scale(1.1) rotate(120deg);
+            }
+            66% {
+              transform: translate(-20px, 20px) scale(0.9) rotate(240deg);
+            }
+          }
+          
+          @keyframes lavaFloat2 {
+            0%, 100% {
+              transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+            33% {
+              transform: translate(-40px, 40px) scale(1.2) rotate(-120deg);
+            }
+            66% {
+              transform: translate(40px, -20px) scale(0.8) rotate(-240deg);
+            }
+          }
+          
+          @keyframes lavaFloat3 {
+            0%, 100% {
+              transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+            33% {
+              transform: translate(20px, 50px) scale(0.9) rotate(180deg);
+            }
+            66% {
+              transform: translate(-30px, -40px) scale(1.1) rotate(360deg);
+            }
+          }
+          
+          .lava-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            opacity: 0.7;
+            mix-blend-mode: multiply;
+          }
+          
+          .lava-blob-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.8) 0%, rgba(21, 128, 61, 0.6) 50%, transparent 70%);
+            top: -200px;
+            left: -200px;
+            animation: lavaFloat1 20s ease-in-out infinite;
+          }
+          
+          .lava-blob-2 {
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(21, 128, 61, 0.8) 0%, rgba(20, 83, 45, 0.6) 50%, transparent 70%);
+            top: 50%;
+            right: -300px;
+            animation: lavaFloat2 25s ease-in-out infinite;
+          }
+          
+          .lava-blob-3 {
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(74, 222, 128, 0.6) 0%, rgba(34, 197, 94, 0.4) 50%, transparent 70%);
+            bottom: -300px;
+            left: 30%;
+            animation: lavaFloat3 30s ease-in-out infinite;
+          }
+          
+          .lava-blob-4 {
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(circle, rgba(20, 83, 45, 0.8) 0%, rgba(5, 46, 22, 0.6) 50%, transparent 70%);
+            top: 20%;
+            left: 40%;
+            animation: lavaFloat2 22s ease-in-out infinite reverse;
+          }
+          
+          .lava-blob-5 {
+            width: 650px;
+            height: 650px;
+            background: radial-gradient(circle, rgba(34, 197, 94, 0.7) 0%, rgba(74, 222, 128, 0.5) 50%, transparent 70%);
+            bottom: 10%;
+            right: 10%;
+            animation: lavaFloat1 28s ease-in-out infinite;
+          }
+        ` }} />
+        <div className="lava-blob lava-blob-1"></div>
+        <div className="lava-blob lava-blob-2"></div>
+        <div className="lava-blob lava-blob-3"></div>
+        <div className="lava-blob lava-blob-4"></div>
+        <div className="lava-blob lava-blob-5"></div>
+      </div>
+      
       {/* Compact Header */}
-      <div className="h-12 flex justify-between items-center px-6 text-white">
+      <div className="h-12 flex justify-between items-center px-6 text-white relative z-10">
         <h1 className="text-xl font-bold">6 nimmt!</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm">Round {currentRoundNumber}</span>
@@ -145,7 +244,7 @@ export default function GamePage() {
       </div>
 
       {/* Main Game Area - Takes available space between header and player hand */}
-      <div className="flex-1 flex gap-4 px-6 py-2">
+      <div className="flex-1 flex gap-4 px-6 py-2 relative z-10">
         {/* Board Area - Center/Left */}
         <div className="flex-1 flex items-center justify-center">
           <Board 
@@ -212,7 +311,7 @@ export default function GamePage() {
         )}
 
       {/* Player Hand Area - Bottom - Fixed height */}
-      <div className="h-56 px-6 pb-2">
+      <div className="h-56 px-6 pb-2 relative z-10">
         <PlayerHand
           cards={humanPlayer.hand}
           selectedCard={selectedCard}
