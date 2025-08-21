@@ -2,22 +2,30 @@ import React from 'react'
 import { type Card as CardType } from '../engine/card'
 import { Card } from './Card'
 
-// Add breathing animation styles
+// Add breathing animation styles with 3D tilt
 const breathingStyles = `
   @keyframes breathe {
     0%, 100% {
-      transform: var(--base-transform) translateY(0px) rotate(0deg);
+      transform: var(--base-transform) translateY(0px) rotateX(0deg) rotateY(0deg);
     }
     25% {
-      transform: var(--base-transform) translateY(-2px) rotate(0.5deg);
+      transform: var(--base-transform) translateY(-2px) rotateX(2deg) rotateY(-1deg);
+    }
+    50% {
+      transform: var(--base-transform) translateY(0px) rotateX(-1deg) rotateY(1deg);
     }
     75% {
-      transform: var(--base-transform) translateY(2px) rotate(-0.5deg);
+      transform: var(--base-transform) translateY(2px) rotateX(-2deg) rotateY(-1deg);
     }
   }
   
   .animate-breathe {
     animation: breathe 4s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+  
+  .card-container {
+    perspective: 1000px;
   }
 `
 
@@ -85,7 +93,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           No cards in hand
         </div>
       ) : (
-        <div className="relative flex justify-center items-end h-52 overflow-visible">
+        <div className="relative flex justify-center items-end h-52 overflow-visible card-container">
           {sortedCards.map((card, index) => {
             const isSelected = selectedCard?.number === card.number
             const cardStyle = getCardStyle(index, sortedCards.length)
