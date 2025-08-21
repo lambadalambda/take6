@@ -1,5 +1,7 @@
 import React from 'react'
 import { type Board as BoardType } from '../engine/board'
+import { getRowForCard } from '../engine/board'
+import { type PlayerSelection } from '../engine/game'
 import { Card } from './Card'
 
 // Add breathing animation styles with 3D tilt - more exaggerated for small cards
@@ -19,6 +21,21 @@ const breathingStyles = `
     }
   }
   
+  @keyframes cardGrowIn {
+    0% {
+      transform: scale(0) rotate(180deg);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2) rotate(90deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+  
   .board-card-animate {
     animation: boardBreathe 3s ease-in-out infinite;
     transform-style: preserve-3d;
@@ -30,6 +47,11 @@ const breathingStyles = `
     z-index: 10;
   }
   
+  .board-card-growing {
+    animation: cardGrowIn 1s ease-out forwards;
+    transform-style: preserve-3d;
+  }
+  
   .board-row-container {
     perspective: 1000px;
   }
@@ -38,13 +60,45 @@ const breathingStyles = `
 export type BoardProps = {
   board: BoardType
   className?: string
+  animatingCardIndex?: number
+  animatingSelections?: PlayerSelection[]
 }
 
-export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
+export const Board: React.FC<BoardProps> = ({ 
+  board, 
+  className = '',
+  animatingCardIndex = -1,
+  animatingSelections = []
+}) => {
   const MAX_CARDS_PER_ROW = 5
 
   const calculateRowBullHeads = (row: BoardType[number]): number => {
     return row.reduce((sum, card) => sum + card.bullHeads, 0)
+  }
+  
+  // Get all cards that should be shown as animating in this row
+  const getAnimatingCardsForRow = (rowIndex: number) => {
+    if (animatingCardIndex < 0 || !animatingSelections.length) return []
+    
+    // Sort selections by card number to match overlay order
+    const sortedSelections = [...animatingSelections].sort((a, b) => a.card.number - b.card.number)
+    
+    // Get all cards up to and including the current animating index that belong to this row
+    const cardsForRow = []
+    for (let i = 0; i <= animatingCardIndex && i < sortedSelections.length; i++) {
+      const selection = sortedSelections[i]
+      const targetRow = getRowForCard(board, selection.card)
+      const actualRow = targetRow === -1 ? (selection.chosenRow || 0) : targetRow
+      
+      if (actualRow === rowIndex) {
+        cardsForRow.push({
+          card: selection.card,
+          isCurrentlyAnimating: i === animatingCardIndex
+        })
+      }
+    }
+    
+    return cardsForRow
   }
 
   return (
@@ -88,8 +142,20 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
                 </div>
               ))}
               
+              {/* Render animating cards for this row */}
+              {getAnimatingCardsForRow(rowIndex).map((animatingCard, index) => (
+                <div 
+                  key={`animating-${rowIndex}-${index}`} 
+                  className={animatingCard.isCurrentlyAnimating ? "board-card-growing relative" : "board-card-animate relative"}
+                >
+                  <Card card={animatingCard.card} size="small" />
+                </div>
+              ))}
+              
               {/* Render empty slots */}
-              {Array.from({ length: MAX_CARDS_PER_ROW - row.length }).map((_, i) => (
+              {Array.from({ 
+                length: MAX_CARDS_PER_ROW - row.length - getAnimatingCardsForRow(rowIndex).length 
+              }).map((_, i) => (
                 <div
                   key={`empty-${i}`}
                   data-testid="empty-slot"

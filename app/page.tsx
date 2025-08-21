@@ -28,6 +28,7 @@ export default function GamePage() {
   } = useGameStore()
 
   const [showRowSelection, setShowRowSelection] = useState(false)
+  const [animatingCardIndex, setAnimatingCardIndex] = useState<number>(-1)
 
   // Initialize game on mount
   useEffect(() => {
@@ -147,7 +148,12 @@ export default function GamePage() {
       <div className="flex-1 flex gap-4 px-6 py-2">
         {/* Board Area - Center/Left */}
         <div className="flex-1 flex items-center justify-center">
-          <Board board={game.board} className="w-full max-w-5xl" />
+          <Board 
+            board={game.board} 
+            className="w-full max-w-5xl"
+            animatingCardIndex={gamePhase === 'revealing' ? animatingCardIndex : -1}
+            animatingSelections={gamePhase === 'revealing' ? game.playerSelections : []}
+          />
         </div>
         
         {/* Side Panel - Right */}
@@ -171,7 +177,11 @@ export default function GamePage() {
             selections={game.playerSelections}
             playerNames={game.players.map(p => p.name)}
             board={game.board}
+            onCardAnimating={(index) => {
+              setAnimatingCardIndex(index)
+            }}
             onComplete={() => {
+              setAnimatingCardIndex(-1)
               useGameStore.setState({ gamePhase: 'resolving' })
             }}
           />
