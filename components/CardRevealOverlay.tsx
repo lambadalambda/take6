@@ -13,6 +13,29 @@ export type CardRevealOverlayProps = {
   onCardAnimating?: (cardIndex: number) => void
 }
 
+// Add swaying animation styles matching player hand
+const swayingStyles = `
+  @keyframes overlaySway {
+    0%, 100% {
+      transform: translateY(0px) rotateX(0deg) rotateY(0deg);
+    }
+    25% {
+      transform: translateY(-6px) rotateX(5deg) rotateY(-3deg);
+    }
+    50% {
+      transform: translateY(0px) rotateX(-3deg) rotateY(3deg);
+    }
+    75% {
+      transform: translateY(5px) rotateX(-5deg) rotateY(-3deg);
+    }
+  }
+  
+  .overlay-card-sway {
+    animation: overlaySway 4s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+`
+
 export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
   selections,
   playerNames,
@@ -88,30 +111,37 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
   }
   
   return (
-    <div 
-      className={`fixed inset-0 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
-        phase === 'fadingIn' ? 'opacity-0' : 
-        phase === 'fadingOut' ? 'opacity-0' : 
-        'opacity-100'
-      }`}
-    >
-      <div className="flex gap-6">
-        {sortedSelections.map((selection, index) => (
-          <div 
-            key={index} 
-            className="flex flex-col items-center gap-2"
-            style={{
-              transform: getCardScale(index),
-              transition: 'transform 1s ease-in-out'
-            }}
-          >
-            <Card card={selection.card} />
-            <div className="bg-white px-3 py-1 rounded-full text-sm font-bold">
-              {playerNames[selection.playerIndex]}
+    <>
+      <style dangerouslySetInnerHTML={{ __html: swayingStyles }} />
+      <div 
+        className={`fixed inset-0 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
+          phase === 'fadingIn' ? 'opacity-0' : 
+          phase === 'fadingOut' ? 'opacity-0' : 
+          'opacity-100'
+        }`}
+        style={{ perspective: '1000px' }}
+      >
+        <div className="flex gap-6">
+          {sortedSelections.map((selection, index) => (
+            <div 
+              key={index} 
+              className={`flex flex-col items-center gap-2 ${
+                !animatingCards.has(index) ? 'overlay-card-sway' : ''
+              }`}
+              style={{
+                transform: getCardScale(index),
+                transition: 'transform 1s ease-in-out',
+                animationDelay: `${index * 0.2}s`
+              }}
+            >
+              <Card card={selection.card} />
+              <div className="bg-white px-3 py-1 rounded-full text-sm font-bold">
+                {playerNames[selection.playerIndex]}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+    </>
   )
 }
