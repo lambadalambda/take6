@@ -9,7 +9,8 @@ describe('Game Store', () => {
       game: null,
       selectedCard: null,
       gamePhase: 'waiting',
-      rowSelection: null
+      rowSelection: null,
+      logEntries: []
     })
   })
 
@@ -251,5 +252,119 @@ describe('Game Store', () => {
     expect(result.current.game).toBeNull()
     expect(result.current.selectedCard).toBeNull()
     expect(result.current.gamePhase).toBe('waiting')
+  })
+
+  it('should generate log entries when resolving round', () => {
+    const { result } = renderHook(() => useGameStore())
+    
+    act(() => {
+      result.current.initializeGame(['Alice', 'Bot1', 'Bot2', 'Bot3'])
+      result.current.startNewRound()
+    })
+    
+    // Set up controlled board
+    act(() => {
+      useGameStore.setState(state => ({
+        game: state.game ? {
+          ...state.game,
+          board: [
+            [createCard(10)],
+            [createCard(20)],
+            [createCard(30)],
+            [createCard(40)]
+          ],
+          players: state.game.players.map((p, i) => ({
+            ...p,
+            hand: [createCard(50 + i * 5), ...p.hand.slice(1)]
+          }))
+        } : null
+      }))
+    })
+    
+    // Human player selects card and submits
+    const humanCard = result.current.game?.players[0].hand[0]
+    
+    act(() => {
+      result.current.selectCard(humanCard!)
+      result.current.submitTurn()
+      result.current.resolveCurrentRound()
+    })
+    
+    // Should have log entries for all 4 players
+    expect(result.current.logEntries).toHaveLength(4)
+    
+    // All should be placed actions (no penalties)
+    expect(result.current.logEntries.every(e => e.action === 'placed')).toBe(true)
+    
+    // Alice should be in the entries
+    const aliceEntry = result.current.logEntries.find(e => e.player === 'Alice')
+    expect(aliceEntry).toBeDefined()
+    expect(aliceEntry?.card).toBe(50)
+  })
+
+  it('should generate log entry for sixth card', () => {
+    const { result } = renderHook(() => useGameStore())
+    
+    act(() => {
+      result.current.initializeGame(['Alice', 'Bot1', 'Bot2', 'Bot3'])
+      result.current.startNewRound()
+    })
+    
+    // Set up board with row that has 5 cards
+    act(() => {
+      useGameStore.setState(state => ({
+        game: state.game ? {
+          ...state.game,
+          board: [
+            [createCard(10), createCard(11), createCard(12), createCard(13), createCard(14)], // Full row
+            [createCard(20)],
+            [createCard(30)],
+            [createCard(40)]
+          ],
+          players: state.game.players.map((p, i) => ({
+            ...p,
+            hand: i === 0 ? [createCard(15), ...p.hand.slice(1)] : p.hand // Alice gets 15 (6th card)
+          }))
+        } : null
+      }))
+    })
+    
+    const humanCard = createCard(15)
+    
+    act(() => {
+      result.current.selectCard(humanCard)
+      result.current.submitTurn()
+      result.current.resolveCurrentRound()
+    })
+    
+    // Find Alice's log entry
+    const aliceEntry = result.current.logEntries.find(e => e.player === 'Alice')
+    expect(aliceEntry?.action).toBe('sixth-card')
+    expect(aliceEntry?.penaltyCards).toBe(5)
+    expect(aliceEntry?.row).toBe(1)
+  })
+
+  it('should clear log entries when starting new round', () => {
+    const { result } = renderHook(() => useGameStore())
+    
+    act(() => {
+      result.current.initializeGame(['Alice', 'Bot1', 'Bot2', 'Bot3'])
+      result.current.startNewRound()
+      
+      // Add some log entries
+      useGameStore.setState({
+        logEntries: [
+          { player: 'Test', card: 10, action: 'placed', row: 1 }
+        ]
+      })
+    })
+    
+    expect(result.current.logEntries).toHaveLength(1)
+    
+    act(() => {
+      result.current.startNewRound()
+    })
+    
+    expect(result.current.logEntries).toHaveLength(0)
   })
 })

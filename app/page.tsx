@@ -5,6 +5,7 @@ import { useGameStore } from '../store/gameStore'
 import { Board } from '../components/Board'
 import { PlayerHand } from '../components/PlayerHand'
 import { ScoreBoard } from '../components/ScoreBoard'
+import { GameLog } from '../components/GameLog'
 import { type Card } from '../engine/card'
 
 export default function GamePage() {
@@ -13,6 +14,7 @@ export default function GamePage() {
     selectedCard,
     gamePhase,
     rowSelection,
+    logEntries,
     initializeGame,
     startNewRound,
     selectCard,
@@ -148,12 +150,13 @@ export default function GamePage() {
           <div className="lg:col-span-2">
             <Board board={game.board} />
           </div>
-          <div>
+          <div className="space-y-4">
             <ScoreBoard 
               players={game.players} 
               currentPlayerIndex={0}
               currentRound={currentRoundNumber}
             />
+            <GameLog entries={logEntries} />
           </div>
         </div>
 

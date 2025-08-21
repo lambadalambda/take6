@@ -12,6 +12,7 @@ import {
 import { getRowForCard } from '../engine/board'
 import { type Card } from '../engine/card'
 import { createEasyBot, selectCardForBot } from '../ai/easyBot'
+import { type LogEntry } from '../components/GameLog'
 
 export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'resolving' | 'gameOver'
 
@@ -26,6 +27,7 @@ export type GameStore = {
   selectedCard: Card | null
   gamePhase: GamePhase
   rowSelection: RowSelectionState | null
+  logEntries: LogEntry[]
   
   // Actions
   initializeGame: (playerNames: string[]) => void
@@ -45,6 +47,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedCard: null,
   gamePhase: 'waiting',
   rowSelection: null,
+  logEntries: [],
   
   // Actions
   initializeGame: (playerNames) => {
@@ -57,7 +60,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!game) return
     
     const newGame = initializeRound(game)
-    set({ game: newGame, selectedCard: null, gamePhase: 'selecting' })
+    set({ game: newGame, selectedCard: null, gamePhase: 'selecting', logEntries: [] })
   },
   
   selectCard: (card) => {
@@ -147,13 +150,66 @@ export const useGameStore = create<GameStore>((set, get) => ({
     const { game } = get()
     if (!game || !getAllPlayersReady(game)) return
     
+    // Generate log entries before resolution
+    const newLogEntries: LogEntry[] = []
+    
+    // Sort selections by card value for proper order
+    const sortedSelections = [...game.playerSelections]
+      .sort((a, b) => a.card.number - b.card.number)
+    
+    sortedSelections.forEach(selection => {
+      const player = game.players[selection.playerIndex]
+      const card = selection.card
+      const targetRow = getRowForCard(game.board, card)
+      
+      if (targetRow === -1) {
+        // Too low card - player chose a row
+        const chosenRow = selection.chosenRow || 0
+        const takenCards = game.board[chosenRow]
+        const bullHeads = takenCards.reduce((sum, c) => sum + c.bullHeads, 0)
+        
+        newLogEntries.push({
+          player: player.name,
+          card: card.number,
+          action: 'took-row',
+          row: chosenRow + 1,
+          penaltyCards: takenCards.length,
+          bullHeads
+        })
+      } else {
+        const row = game.board[targetRow]
+        
+        if (row.length === 5) {
+          // 6th card - takes the row
+          const bullHeads = row.reduce((sum, c) => sum + c.bullHeads, 0)
+          
+          newLogEntries.push({
+            player: player.name,
+            card: card.number,
+            action: 'sixth-card',
+            row: targetRow + 1,
+            penaltyCards: row.length,
+            bullHeads
+          })
+        } else {
+          // Normal placement
+          newLogEntries.push({
+            player: player.name,
+            card: card.number,
+            action: 'placed',
+            row: targetRow + 1
+          })
+        }
+      }
+    })
+    
     const resolved = resolveRound(game)
     
     // Check if game is over
     if (checkGameOver(resolved)) {
-      set({ game: resolved, gamePhase: 'gameOver' })
+      set({ game: resolved, gamePhase: 'gameOver', logEntries: newLogEntries })
     } else {
-      set({ game: resolved, gamePhase: 'selecting' })
+      set({ game: resolved, gamePhase: 'selecting', logEntries: newLogEntries })
     }
   },
   
@@ -178,7 +234,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
       game: null,
       selectedCard: null,
       gamePhase: 'waiting',
-      rowSelection: null
+      rowSelection: null,
+      logEntries: []
     })
   }
 }))
