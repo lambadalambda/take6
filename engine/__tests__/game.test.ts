@@ -102,7 +102,15 @@ describe('Game functions', () => {
       const game = createGame({ playerNames: ['Alice', 'Bob', 'Charlie', 'Diana'] })
       const initialized = initializeRound(game)
       
-      const notInHand = createCard(104)
+      // Find a card that's definitely not in player 0's hand
+      const playerCards = new Set(initialized.players[0].hand.map(c => c.number))
+      let notInHandNumber = 1
+      while (playerCards.has(notInHandNumber) && notInHandNumber <= 104) {
+        notInHandNumber++
+      }
+      
+      // This card is guaranteed not to be in the player's hand
+      const notInHand = createCard(notInHandNumber)
       
       expect(() => selectCardForPlayer(initialized, 0, notInHand))
         .toThrow('Cannot select card not in hand')

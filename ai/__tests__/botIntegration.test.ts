@@ -19,6 +19,25 @@ describe('Bot Integration with Game Engine', () => {
     // Initialize round
     let gameState = initializeRound(game)
     
+    // Set up controlled board and hands to avoid randomness issues
+    gameState = {
+      ...gameState,
+      board: [
+        [{ number: 10, bullHeads: 3 }],
+        [{ number: 20, bullHeads: 3 }],
+        [{ number: 30, bullHeads: 3 }],
+        [{ number: 40, bullHeads: 3 }]
+      ],
+      players: gameState.players.map((p, i) => ({
+        ...p,
+        // Give each player cards that are definitely higher than board cards
+        hand: Array.from({ length: 10 }, (_, j) => ({ 
+          number: 50 + i * 10 + j, 
+          bullHeads: 1 
+        }))
+      }))
+    }
+    
     // Verify board is initialized
     expect(gameState.board.length).toBe(4)
     
