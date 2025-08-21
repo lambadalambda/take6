@@ -41,9 +41,14 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
         // Count how many cards are already in that row to determine position
         const cardsInRow = board[rowIndex]?.length || 0
         
+        // Calculate position, then offset by half card size to center it
+        // Normal card is w-28 h-40 (112px x 160px), scaled to 0.7 = 78.4px x 112px
+        const baseX = boardRect.left + 60 + (cardsInRow * 90)
+        const baseY = boardRect.top + (rowIndex * 135) + 20
+        
         positions[index] = {
-          x: boardRect.left + 60 + (cardsInRow * 90), // 90px spacing between cards
-          y: boardRect.top + (rowIndex * 135) + 20 // 135px between rows
+          x: baseX - 39, // Subtract half of scaled width (78.4/2 ≈ 39)
+          y: baseY - 56  // Subtract half of scaled height (112/2 = 56)
         }
       })
       
