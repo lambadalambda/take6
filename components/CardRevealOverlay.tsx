@@ -102,14 +102,6 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
   
   if (phase === 'done') return null
   
-  const getCardScale = (index: number) => {
-    if (phase === 'animating' && animatingCards.has(index)) {
-      // Card is animating - shrink to 0
-      return 'scale(0)'
-    }
-    return 'scale(1)'
-  }
-  
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: swayingStyles }} />
@@ -122,24 +114,24 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
         style={{ perspective: '1000px' }}
       >
         <div className="flex gap-6">
-          {sortedSelections.map((selection, index) => (
-            <div 
-              key={index} 
-              className={`flex flex-col items-center gap-2 ${
-                !animatingCards.has(index) ? 'overlay-card-sway' : ''
-              }`}
-              style={{
-                transform: getCardScale(index),
-                transition: 'transform 1s ease-in-out',
-                animationDelay: `${index * 0.2}s`
-              }}
-            >
-              <Card card={selection.card} />
-              <div className="bg-white px-3 py-1 rounded-full text-sm font-bold">
-                {playerNames[selection.playerIndex]}
+          {sortedSelections.map((selection, index) => {
+            const shouldShow = !animatingCards.has(index)
+            
+            return shouldShow ? (
+              <div 
+                key={index} 
+                className="flex flex-col items-center gap-2 overlay-card-sway"
+                style={{
+                  animationDelay: `${index * 0.2}s`
+                }}
+              >
+                <Card card={selection.card} />
+                <div className="bg-white px-3 py-1 rounded-full text-sm font-bold">
+                  {playerNames[selection.playerIndex]}
+                </div>
               </div>
-            </div>
-          ))}
+            ) : null
+          })}
         </div>
       </div>
     </>
