@@ -54,7 +54,7 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
     const timer1 = setTimeout(() => {
       setPhase('animating')
       setCurrentCardIndex(0)
-    }, 5000)
+    }, 2000)
     
     return () => clearTimeout(timer1)
   }, [])
@@ -67,11 +67,11 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
         }, 1000)
         return () => clearTimeout(timer)
       } else {
-        // All cards animated, complete
+        // All cards animated, complete immediately
         const timer = setTimeout(() => {
           setPhase('done')
           onComplete()
-        }, 1000)
+        }, 500)
         return () => clearTimeout(timer)
       }
     }

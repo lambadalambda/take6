@@ -46,11 +46,8 @@ export default function GamePage() {
     }
 
     if (gamePhase === 'resolving') {
-      // Auto-resolve after a short delay so player can see what happened
-      const timer = setTimeout(() => {
-        resolveCurrentRound()
-      }, 1500)
-      return () => clearTimeout(timer)
+      // Immediately resolve since we already showed the animation
+      resolveCurrentRound()
     }
   }, [gamePhase, resolveCurrentRound])
 
