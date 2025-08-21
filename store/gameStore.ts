@@ -11,7 +11,7 @@ import {
 } from '../engine/game'
 import { getRowForCard } from '../engine/board'
 import { type Card } from '../engine/card'
-import { createEasyBot, selectCardForBot } from '../ai/easyBot'
+import { createSmartBot, selectCardForSmartBot } from '../ai/smartBot'
 import { type LogEntry } from '../components/GameLog'
 
 export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'resolving' | 'gameOver'
@@ -87,12 +87,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
     let updatedGame = selectCardForPlayer(game, 0, selectedCard)
     
     // Have bots make their selections
-    const bots = game.players.slice(1).map(p => createEasyBot(p.name))
+    const bots = game.players.slice(1).map(p => createSmartBot(p.name))
     
     for (let i = 1; i < game.players.length; i++) {
       const bot = bots[i - 1]
       const player = updatedGame.players[i]
-      const decision = selectCardForBot(bot, player, updatedGame.board)
+      const decision = selectCardForSmartBot(bot, player, updatedGame.board)
       
       updatedGame = selectCardForPlayer(
         updatedGame,
@@ -122,13 +122,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     )
     
     // Have bots make their selections
-    const bots = game.players.slice(1).map(p => createEasyBot(p.name))
+    const bots = game.players.slice(1).map(p => createSmartBot(p.name))
     
     let finalGame = updatedGame
     for (let i = 1; i < game.players.length; i++) {
       const bot = bots[i - 1]
       const player = finalGame.players[i]
-      const decision = selectCardForBot(bot, player, finalGame.board)
+      const decision = selectCardForSmartBot(bot, player, finalGame.board)
       
       finalGame = selectCardForPlayer(
         finalGame,
