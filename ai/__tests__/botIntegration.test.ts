@@ -132,6 +132,26 @@ describe('Bot Integration with Game Engine', () => {
     })
     
     let gameState = initializeRound(game)
+    
+    // Set up controlled state to avoid randomness
+    gameState = {
+      ...gameState,
+      board: [
+        [{ number: 5, bullHeads: 2 }],
+        [{ number: 10, bullHeads: 3 }],
+        [{ number: 15, bullHeads: 2 }],
+        [{ number: 20, bullHeads: 3 }]
+      ],
+      players: gameState.players.map((p, i) => ({
+        ...p,
+        // Give each bot cards that are higher than board to avoid too-low issues
+        hand: Array.from({ length: 10 }, (_, j) => ({ 
+          number: 25 + i * 20 + j, 
+          bullHeads: 1 
+        }))
+      }))
+    }
+    
     const bots = gameState.players.map(p => createEasyBot(p.name))
     
     // Play 3 turns
