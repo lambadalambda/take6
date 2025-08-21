@@ -47,8 +47,12 @@ export const Card: React.FC<CardProps> = ({
   const bullHeadRows: number[] = []
   if (card.bullHeads <= 5) {
     bullHeadRows.push(card.bullHeads)
+  } else if (card.bullHeads === 7) {
+    // Special case for 7: split 4+3
+    bullHeadRows.push(4)
+    bullHeadRows.push(3)
   } else {
-    // First row gets 5, rest on second row
+    // For 6 or other cases: first row gets 5, rest on second row
     bullHeadRows.push(5)
     bullHeadRows.push(card.bullHeads - 5)
   }
@@ -80,13 +84,19 @@ export const Card: React.FC<CardProps> = ({
       
       {/* Center content */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {/* Larger, unblurred cow background */}
-        <div className="absolute text-7xl opacity-20">
+        {/* Larger, more visible cow background */}
+        <div className="absolute text-8xl opacity-30">
           🐮
         </div>
-        {/* Card number with impact-style border */}
+        {/* Card number with impact-style border and color based on bull heads */}
         <div 
-          className="relative text-4xl font-black text-black z-10"
+          className={`relative text-4xl font-black z-10 ${
+            card.bullHeads === 7 ? 'text-red-600' :
+            card.bullHeads === 5 ? 'text-red-500' :
+            card.bullHeads === 3 ? 'text-yellow-600' :
+            card.bullHeads === 2 ? 'text-yellow-500' :
+            'text-gray-800'
+          }`}
           style={{
             textShadow: `
               -2px -2px 0 #fff,
