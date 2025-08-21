@@ -30,10 +30,24 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     }
   }
 
+  // Calculate arc positioning for each card
+  const getCardStyle = (index: number, total: number) => {
+    const middleIndex = (total - 1) / 2
+    const offset = index - middleIndex
+    const rotation = offset * 3 // degrees of rotation per card
+    const yOffset = Math.abs(offset) * 3 // pixels to push down from center
+    
+    return {
+      transform: `rotate(${rotation}deg) translateY(${yOffset}px)`,
+      transformOrigin: 'bottom center',
+      zIndex: index
+    }
+  }
+
   return (
-    <div data-testid="player-hand" className={`p-4 bg-gray-50 rounded-lg ${className}`.trim()}>
+    <div data-testid="player-hand" className={`p-6 bg-gray-50 rounded-lg ${className}`.trim()}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-semibold">
           {playerName ? `${playerName}'s Hand${isAI ? ' (AI)' : ''}` : 'Your Hand'}
         </h3>
@@ -48,16 +62,37 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           No cards in hand
         </div>
       ) : (
-        <div className="flex flex-wrap gap-3">
-          {sortedCards.map((card, index) => (
-            <Card
-              key={`${card.number}-${index}`}
-              card={card}
-              onClick={onCardSelect ? () => handleCardClick(card) : undefined}
-              selected={selectedCard?.number === card.number}
-              disabled={disabled}
-            />
-          ))}
+        <div className="relative flex justify-center items-end h-52 overflow-visible">
+          {sortedCards.map((card, index) => {
+            const isSelected = selectedCard?.number === card.number
+            const cardStyle = getCardStyle(index, sortedCards.length)
+            const totalCards = sortedCards.length
+            const spacing = Math.min(80, 600 / totalCards) // Dynamic spacing based on number of cards
+            
+            return (
+              <div
+                key={`${card.number}-${index}`}
+                className={`
+                  absolute transition-all duration-200 
+                  ${isSelected ? '-translate-y-8 z-50' : 'hover:-translate-y-4 hover:z-40'}
+                `}
+                style={{
+                  ...cardStyle,
+                  left: `calc(50% + ${(index - (totalCards - 1) / 2) * spacing}px)`,
+                  marginLeft: '-61.6px' // Half of scaled card width (w-28 * 1.1 = 123.2px)
+                }}
+              >
+                <div className="scale-110">
+                  <Card
+                    card={card}
+                    onClick={onCardSelect ? () => handleCardClick(card) : undefined}
+                    selected={isSelected}
+                    disabled={disabled}
+                  />
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
