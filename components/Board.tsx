@@ -23,15 +23,21 @@ const breathingStyles = `
   
   @keyframes cardGrowIn {
     0% {
-      transform: scale(0) rotate(180deg);
+      transform: scale(0);
       opacity: 0;
     }
     50% {
-      transform: scale(1.2) rotate(90deg);
+      transform: scale(1.2);
       opacity: 1;
     }
+    70% {
+      transform: scale(0.95);
+    }
+    85% {
+      transform: scale(1.05);
+    }
     100% {
-      transform: scale(1) rotate(0deg);
+      transform: scale(1);
       opacity: 1;
     }
   }
