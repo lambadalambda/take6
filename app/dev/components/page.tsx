@@ -2,7 +2,9 @@
 
 import React, { useState } from 'react'
 import { Card } from '../../../components/Card'
+import { Board } from '../../../components/Board'
 import { createCard } from '../../../engine/card'
+import { type Board as BoardType } from '../../../engine/board'
 
 export default function ComponentsDevPage() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
@@ -89,10 +91,37 @@ export default function ComponentsDevPage() {
         </div>
       </section>
 
-      {/* Placeholder for future components */}
-      <section className="mb-12 opacity-50">
+      {/* Board Component */}
+      <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">Board Component</h2>
-        <p className="text-gray-600">Coming soon...</p>
+        
+        <div className="space-y-8">
+          {/* Example game board */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Game Board (Various Row States)</h3>
+            <Board 
+              board={[
+                [createCard(10), createCard(15)],  // Row with 2 cards
+                [createCard(20)],  // Row with 1 card
+                [createCard(30), createCard(35), createCard(40)],  // Row with 3 cards
+                [createCard(50), createCard(55), createCard(60), createCard(65), createCard(70)]  // Full row (5 cards)
+              ]}
+            />
+          </div>
+
+          {/* Empty board */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Empty Board (Start of Round)</h3>
+            <Board 
+              board={[
+                [createCard(5)],
+                [createCard(25)],
+                [createCard(45)],
+                [createCard(85)]
+              ]}
+            />
+          </div>
+        </div>
       </section>
 
       <section className="mb-12 opacity-50">
