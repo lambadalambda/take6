@@ -9,7 +9,9 @@ describe('Card Component', () => {
     const card = createCard(42)
     render(<Card card={card} />)
     
-    expect(screen.getByText('42')).toBeInTheDocument()
+    // Card number appears multiple times (corners and center)
+    const numbers = screen.getAllByText('42')
+    expect(numbers.length).toBe(5) // 4 corners + 1 center
   })
 
   it('should display bull heads', () => {

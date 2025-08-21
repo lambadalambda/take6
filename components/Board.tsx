@@ -52,7 +52,7 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
                 <div
                   key={`empty-${i}`}
                   data-testid="empty-slot"
-                  className="border-2 border-dashed border-gray-300 rounded-lg p-4 w-24 h-32 flex items-center justify-center"
+                  className="border-2 border-dashed border-gray-300 rounded-lg w-28 h-40 flex items-center justify-center"
                 >
                   <span className="text-gray-400">Empty</span>
                 </div>
