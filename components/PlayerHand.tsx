@@ -2,6 +2,25 @@ import React from 'react'
 import { type Card as CardType } from '../engine/card'
 import { Card } from './Card'
 
+// Add breathing animation styles
+const breathingStyles = `
+  @keyframes breathe {
+    0%, 100% {
+      transform: var(--base-transform) translateY(0px) rotate(0deg);
+    }
+    25% {
+      transform: var(--base-transform) translateY(-2px) rotate(0.5deg);
+    }
+    75% {
+      transform: var(--base-transform) translateY(2px) rotate(-0.5deg);
+    }
+  }
+  
+  .animate-breathe {
+    animation: breathe 4s ease-in-out infinite;
+  }
+`
+
 export type PlayerHandProps = {
   cards: CardType[]
   onCardSelect?: (card: CardType) => void
@@ -40,13 +59,17 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
     return {
       transform: `rotate(${rotation}deg) translateY(${yOffset}px)`,
       transformOrigin: 'bottom center',
-      zIndex: index
+      zIndex: index,
+      // Stagger animation delays for organic feel
+      animationDelay: `${index * 0.1}s`
     }
   }
 
   return (
-    <div data-testid="player-hand" className={`p-6 bg-gray-50 rounded-lg ${className}`.trim()}>
-      {/* Header */}
+    <>
+      <style dangerouslySetInnerHTML={{ __html: breathingStyles }} />
+      <div data-testid="player-hand" className={`p-6 bg-gray-50 rounded-lg ${className}`.trim()}>
+        {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-semibold">
           {playerName ? `${playerName}'s Hand${isAI ? ' (AI)' : ''}` : 'Your Hand'}
@@ -73,14 +96,15 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
               <div
                 key={`${card.number}-${index}`}
                 className={`
-                  absolute transition-all duration-200 
+                  absolute transition-all duration-200 animate-breathe
                   ${isSelected ? '-translate-y-8 z-50' : 'hover:-translate-y-4 hover:z-40'}
                 `}
                 style={{
                   ...cardStyle,
                   left: `calc(50% + ${(index - (totalCards - 1) / 2) * spacing}px)`,
-                  marginLeft: '-61.6px' // Half of scaled card width (w-28 * 1.1 = 123.2px)
-                }}
+                  marginLeft: '-61.6px', // Half of scaled card width (w-28 * 1.1 = 123.2px)
+                  '--base-transform': cardStyle.transform
+                } as React.CSSProperties}
               >
                 <div className="scale-110">
                   <Card
@@ -95,6 +119,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
           })}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
