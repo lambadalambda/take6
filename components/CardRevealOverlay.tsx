@@ -89,7 +89,7 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
   
   return (
     <div 
-      className={`fixed inset-0 bg-black/70 z-50 flex items-center justify-center transition-opacity duration-300 ${
+      className={`fixed inset-0 z-50 flex items-center justify-center pointer-events-none transition-opacity duration-300 ${
         phase === 'fadingIn' ? 'opacity-0' : 
         phase === 'fadingOut' ? 'opacity-0' : 
         'opacity-100'
