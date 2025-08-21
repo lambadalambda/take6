@@ -3,11 +3,14 @@
 import React, { useState } from 'react'
 import { Card } from '../../../components/Card'
 import { Board } from '../../../components/Board'
+import { PlayerHand } from '../../../components/PlayerHand'
 import { createCard } from '../../../engine/card'
 import { type Board as BoardType } from '../../../engine/board'
+import { type Card as CardType } from '../../../engine/card'
 
 export default function ComponentsDevPage() {
   const [selectedCard, setSelectedCard] = useState<number | null>(null)
+  const [selectedHandCard, setSelectedHandCard] = useState<CardType | null>(null)
 
   const exampleCards = [
     createCard(1),   // 1 bull head
@@ -124,9 +127,54 @@ export default function ComponentsDevPage() {
         </div>
       </section>
 
-      <section className="mb-12 opacity-50">
+      {/* PlayerHand Component */}
+      <section className="mb-12">
         <h2 className="text-2xl font-semibold mb-4">PlayerHand Component</h2>
-        <p className="text-gray-600">Coming soon...</p>
+        
+        <div className="space-y-8">
+          {/* Human player hand */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Human Player Hand (Interactive)</h3>
+            <PlayerHand
+              cards={[
+                createCard(5), createCard(12), createCard(23), createCard(34),
+                createCard(45), createCard(56), createCard(67), createCard(78),
+                createCard(89), createCard(100)
+              ]}
+              playerName="Alice"
+              onCardSelect={(card) => setSelectedHandCard(card)}
+              selectedCard={selectedHandCard}
+            />
+            {selectedHandCard && (
+              <p className="mt-2 text-sm text-gray-600">
+                Selected: Card {selectedHandCard.number} ({selectedHandCard.bullHeads} bull heads)
+              </p>
+            )}
+          </div>
+
+          {/* AI player hand */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">AI Player Hand (Disabled)</h3>
+            <PlayerHand
+              cards={[
+                createCard(10), createCard(20), createCard(30), createCard(40),
+                createCard(50), createCard(60), createCard(70), createCard(80)
+              ]}
+              playerName="Bot1"
+              isAI={true}
+              disabled={true}
+            />
+          </div>
+
+          {/* Empty hand */}
+          <div>
+            <h3 className="text-lg font-medium mb-3">Empty Hand</h3>
+            <PlayerHand
+              cards={[]}
+              playerName="Bob"
+            />
+          </div>
+        </div>
       </section>
 
       <section className="mb-12 opacity-50">
