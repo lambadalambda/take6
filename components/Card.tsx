@@ -22,10 +22,36 @@ export const Card: React.FC<CardProps> = ({
     }
   }
 
-  const baseClasses = 'relative bg-white border-2 border-gray-800 rounded-lg shadow-md transition-all w-28 h-40'
+  // Color based on bull heads
+  const getBackgroundClass = () => {
+    if (card.bullHeads === 7) {
+      // Menacing gradient for highest penalty
+      return 'bg-gradient-to-br from-red-500 via-yellow-400 to-red-500'
+    } else if (card.bullHeads === 5) {
+      return 'bg-red-200'
+    } else if (card.bullHeads === 3) {
+      return 'bg-yellow-200'
+    } else if (card.bullHeads === 2) {
+      return 'bg-yellow-100'
+    } else {
+      return 'bg-white'
+    }
+  }
+
+  const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800 rounded-lg shadow-md transition-all w-28 h-40`
   const interactiveClasses = onClick && !disabled ? 'cursor-pointer hover:shadow-lg hover:scale-105' : ''
   const selectedClasses = selected ? 'ring-4 ring-blue-500' : ''
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : ''
+
+  // Split bull heads into rows if more than 5
+  const bullHeadRows: number[] = []
+  if (card.bullHeads <= 5) {
+    bullHeadRows.push(card.bullHeads)
+  } else {
+    // First row gets 5, rest on second row
+    bullHeadRows.push(5)
+    bullHeadRows.push(card.bullHeads - 5)
+  }
 
   return (
     <div
@@ -39,19 +65,23 @@ export const Card: React.FC<CardProps> = ({
       <div className="absolute bottom-1 left-1 text-xs font-bold rotate-45">{card.number}</div>
       <div className="absolute bottom-1 right-1 text-xs font-bold -rotate-45">{card.number}</div>
       
-      {/* Bull head points at top */}
-      <div className="absolute top-3 left-0 right-0 flex justify-center gap-0.5 px-2">
-        {Array.from({ length: card.bullHeads }).map((_, i) => (
-          <span key={i} data-testid="bull-head" className="text-xs">
-            🐮
-          </span>
+      {/* Bull head points at top - multiple rows if needed */}
+      <div className="absolute top-3 left-0 right-0 px-2">
+        {bullHeadRows.map((count, rowIndex) => (
+          <div key={rowIndex} className="flex justify-center gap-0.5">
+            {Array.from({ length: count }).map((_, i) => (
+              <span key={`${rowIndex}-${i}`} data-testid="bull-head" className="text-xs">
+                🐮
+              </span>
+            ))}
+          </div>
         ))}
       </div>
       
       {/* Center content */}
       <div className="absolute inset-0 flex items-center justify-center">
-        {/* Blurred cow background */}
-        <div className="absolute text-6xl blur-sm opacity-30">
+        {/* Larger, unblurred cow background */}
+        <div className="absolute text-7xl opacity-20">
           🐮
         </div>
         {/* Card number with impact-style border */}

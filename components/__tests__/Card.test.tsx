@@ -74,4 +74,23 @@ describe('Card Component', () => {
     const cardElement = screen.getByTestId('card')
     expect(cardElement).toHaveClass('custom-class')
   })
+
+  it('should apply color based on bull heads', () => {
+    // Test different bull head values for color coding
+    const card1 = createCard(1) // 1 bull head - should be white/light
+    const card2 = createCard(10) // 3 bull heads - should be yellow-ish
+    const card7 = createCard(55) // 7 bull heads - should be red/gradient
+    
+    const { rerender } = render(<Card card={card1} />)
+    let cardElement = screen.getByTestId('card')
+    expect(cardElement.className).toContain('bg-')
+    
+    rerender(<Card card={card2} />)
+    cardElement = screen.getByTestId('card')
+    expect(cardElement.className).toContain('bg-')
+    
+    rerender(<Card card={card7} />)
+    cardElement = screen.getByTestId('card')
+    expect(cardElement.className).toContain('bg-gradient-')
+  })
 })
