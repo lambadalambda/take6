@@ -29,6 +29,42 @@ export default function GamePage() {
 
   const [showRowSelection, setShowRowSelection] = useState(false)
   const [animatingCardIndex, setAnimatingCardIndex] = useState<number>(-1)
+  
+  // Generate lava blob properties with better distribution
+  const [lavaBlobs] = useState(() => {
+    const colors = [
+      'rgb(34, 197, 94)', // emerald
+      'rgb(74, 222, 128)', // bright green
+      'rgb(21, 128, 61)', // forest green
+      'rgb(134, 239, 172)', // light mint
+      'rgb(22, 163, 74)', // medium green
+      'rgb(5, 150, 105)', // teal green
+      'rgb(16, 185, 129)', // turquoise green
+      'rgb(4, 120, 87)', // deep sea green
+    ]
+    
+    // Create a grid-based distribution for better coverage
+    const positions = [
+      { x: 15, y: 20 },
+      { x: 70, y: 15 },
+      { x: 85, y: 60 },
+      { x: 20, y: 75 },
+      { x: 50, y: 45 },
+      { x: 35, y: 35 },
+      { x: 65, y: 80 },
+      { x: 45, y: 10 },
+    ]
+    
+    return positions.map((pos, i) => ({
+      id: i,
+      size: 500 + (i * 50), // Varied but consistent sizes
+      color: colors[i % colors.length],
+      x: pos.x + (Math.random() - 0.5) * 10, // Small random offset
+      y: pos.y + (Math.random() - 0.5) * 10,
+      duration: 25 + (i * 2), // Staggered durations
+      delay: i * 0.3, // Sequential delay for smooth appearance
+    }))
+  })
 
   // Initialize game on mount
   useEffect(() => {
@@ -133,100 +169,70 @@ export default function GamePage() {
       {/* Lava lamp background effect */}
       <div className="absolute inset-0 overflow-hidden">
         <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes lavaFloat1 {
+          @keyframes lavaFloat {
             0%, 100% {
-              transform: translate(0, 0) scale(1) rotate(0deg);
+              transform: translate(0, 0) scale(1);
             }
-            33% {
-              transform: translate(30px, -30px) scale(1.1) rotate(120deg);
+            25% {
+              transform: translate(20px, -30px) scale(1.08);
             }
-            66% {
-              transform: translate(-20px, 20px) scale(0.9) rotate(240deg);
+            50% {
+              transform: translate(-15px, 20px) scale(0.96);
+            }
+            75% {
+              transform: translate(25px, 15px) scale(1.04);
             }
           }
           
-          @keyframes lavaFloat2 {
+          @keyframes lavaFloatReverse {
             0%, 100% {
-              transform: translate(0, 0) scale(1) rotate(0deg);
+              transform: translate(0, 0) scale(1);
             }
-            33% {
-              transform: translate(-40px, 40px) scale(1.2) rotate(-120deg);
+            25% {
+              transform: translate(-25px, 20px) scale(0.95);
             }
-            66% {
-              transform: translate(40px, -20px) scale(0.8) rotate(-240deg);
+            50% {
+              transform: translate(20px, -15px) scale(1.06);
+            }
+            75% {
+              transform: translate(-20px, -25px) scale(0.98);
             }
           }
           
-          @keyframes lavaFloat3 {
-            0%, 100% {
-              transform: translate(0, 0) scale(1) rotate(0deg);
+          @keyframes fadeIn {
+            from {
+              opacity: 0;
             }
-            33% {
-              transform: translate(20px, 50px) scale(0.9) rotate(180deg);
-            }
-            66% {
-              transform: translate(-30px, -40px) scale(1.1) rotate(360deg);
+            to {
+              opacity: 0.4;
             }
           }
           
           .lava-blob {
             position: absolute;
             border-radius: 50%;
-            filter: blur(40px);
-            opacity: 0.7;
-            mix-blend-mode: multiply;
-          }
-          
-          .lava-blob-1 {
-            width: 600px;
-            height: 600px;
-            background: radial-gradient(circle, rgba(34, 197, 94, 0.8) 0%, rgba(21, 128, 61, 0.6) 50%, transparent 70%);
-            top: -200px;
-            left: -200px;
-            animation: lavaFloat1 20s ease-in-out infinite;
-          }
-          
-          .lava-blob-2 {
-            width: 800px;
-            height: 800px;
-            background: radial-gradient(circle, rgba(21, 128, 61, 0.8) 0%, rgba(20, 83, 45, 0.6) 50%, transparent 70%);
-            top: 50%;
-            right: -300px;
-            animation: lavaFloat2 25s ease-in-out infinite;
-          }
-          
-          .lava-blob-3 {
-            width: 700px;
-            height: 700px;
-            background: radial-gradient(circle, rgba(74, 222, 128, 0.6) 0%, rgba(34, 197, 94, 0.4) 50%, transparent 70%);
-            bottom: -300px;
-            left: 30%;
-            animation: lavaFloat3 30s ease-in-out infinite;
-          }
-          
-          .lava-blob-4 {
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, rgba(20, 83, 45, 0.8) 0%, rgba(5, 46, 22, 0.6) 50%, transparent 70%);
-            top: 20%;
-            left: 40%;
-            animation: lavaFloat2 22s ease-in-out infinite reverse;
-          }
-          
-          .lava-blob-5 {
-            width: 650px;
-            height: 650px;
-            background: radial-gradient(circle, rgba(34, 197, 94, 0.7) 0%, rgba(74, 222, 128, 0.5) 50%, transparent 70%);
-            bottom: 10%;
-            right: 10%;
-            animation: lavaFloat1 28s ease-in-out infinite;
+            filter: blur(80px);
+            opacity: 0.4;
+            mix-blend-mode: screen;
+            will-change: transform;
+            animation-fill-mode: both;
           }
         ` }} />
-        <div className="lava-blob lava-blob-1"></div>
-        <div className="lava-blob lava-blob-2"></div>
-        <div className="lava-blob lava-blob-3"></div>
-        <div className="lava-blob lava-blob-4"></div>
-        <div className="lava-blob lava-blob-5"></div>
+        {lavaBlobs.map((blob) => (
+          <div
+            key={blob.id}
+            className="lava-blob"
+            style={{
+              width: `${blob.size}px`,
+              height: `${blob.size}px`,
+              background: `radial-gradient(circle, ${blob.color} 0%, transparent 60%)`,
+              left: `${blob.x}%`,
+              top: `${blob.y}%`,
+              transform: 'translate(-50%, -50%)',
+              animation: `fadeIn 2s ease-out ${blob.delay}s both, ${blob.id % 2 === 0 ? 'lavaFloat' : 'lavaFloatReverse'} ${blob.duration}s ease-in-out ${blob.delay}s infinite`,
+            }}
+          />
+        ))}
       </div>
       
       {/* Compact Header */}
