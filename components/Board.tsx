@@ -2,6 +2,39 @@ import React from 'react'
 import { type Board as BoardType } from '../engine/board'
 import { Card } from './Card'
 
+// Add breathing animation styles with 3D tilt - more exaggerated for small cards
+const breathingStyles = `
+  @keyframes boardBreathe {
+    0%, 100% {
+      transform: translateY(0px) rotateX(0deg) rotateY(0deg) scale(1);
+    }
+    25% {
+      transform: translateY(-4px) rotateX(3deg) rotateY(-2deg) scale(1.05);
+    }
+    50% {
+      transform: translateY(0px) rotateX(-2deg) rotateY(2deg) scale(1.02);
+    }
+    75% {
+      transform: translateY(3px) rotateX(-3deg) rotateY(-2deg) scale(1.03);
+    }
+  }
+  
+  .board-card-animate {
+    animation: boardBreathe 3s ease-in-out infinite;
+    transform-style: preserve-3d;
+    transition: all 0.2s ease;
+  }
+  
+  .board-card-animate:hover {
+    transform: translateY(-6px) scale(1.1) !important;
+    z-index: 10;
+  }
+  
+  .board-row-container {
+    perspective: 1000px;
+  }
+`
+
 export type BoardProps = {
   board: BoardType
   className?: string
@@ -15,7 +48,9 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
   }
 
   return (
-    <div data-testid="board" className={`space-y-2 px-12 ${className}`.trim()}>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: breathingStyles }} />
+      <div data-testid="board" className={`space-y-2 px-12 ${className}`.trim()}>
       {board.map((row, rowIndex) => {
         const isFull = row.length === MAX_CARDS_PER_ROW
         const bullHeadTotal = calculateRowBullHeads(row)
@@ -41,10 +76,16 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
               </span>
             </div>
             
-            <div className="flex gap-2">
+            <div className="flex gap-2 board-row-container">
               {/* Render existing cards */}
               {row.map((card, cardIndex) => (
-                <Card key={`${rowIndex}-${cardIndex}`} card={card} size="small" />
+                <div 
+                  key={`${rowIndex}-${cardIndex}`} 
+                  className="board-card-animate relative"
+                  style={{ animationDelay: `${cardIndex * 0.15 + rowIndex * 0.1}s` }}
+                >
+                  <Card card={card} size="small" />
+                </div>
               ))}
               
               {/* Render empty slots */}
@@ -62,5 +103,6 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
         )
       })}
     </div>
+    </>
   )
 }
