@@ -76,24 +76,24 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: breathingStyles }} />
-      <div data-testid="player-hand" className={`p-6 bg-gray-50 rounded-lg ${className}`.trim()}>
+      <div data-testid="player-hand" className={`${className}`.trim()}>
         {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-semibold">
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-lg font-semibold text-white/80">
           {playerName ? `${playerName}'s Hand${isAI ? ' (AI)' : ''}` : 'Your Hand'}
         </h3>
-        <span className="text-sm text-gray-600">
+        <span className="text-sm text-white/60">
           {cards.length > 0 ? `${cards.length} cards` : ''}
         </span>
       </div>
 
       {/* Cards */}
       {cards.length === 0 ? (
-        <div className="text-gray-500 text-center py-8">
+        <div className="text-white/40 text-center py-8">
           No cards in hand
         </div>
       ) : (
-        <div className="relative flex justify-center items-end h-52 overflow-visible card-container">
+        <div className="relative flex justify-center items-end h-44 overflow-visible card-container">
           {sortedCards.map((card, index) => {
             const isSelected = selectedCard?.number === card.number
             const cardStyle = getCardStyle(index, sortedCards.length)
@@ -115,7 +115,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   zIndex: isSelected ? 100 : cardStyle.zIndex
                 } as React.CSSProperties}
               >
-                <div className="scale-110">
+                <div className="scale-100">
                   <Card
                     card={card}
                     onClick={onCardSelect ? () => handleCardClick(card) : undefined}

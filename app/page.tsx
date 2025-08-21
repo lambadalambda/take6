@@ -130,35 +130,41 @@ export default function GamePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-4">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow p-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">6 nimmt!</h1>
-          <div className="flex items-center gap-4">
-            <span className="text-gray-600">Round {currentRoundNumber}</span>
-            <span className="text-sm px-3 py-1 bg-blue-100 rounded-full">
-              {gamePhase === 'selecting' && 'Select a card'}
-              {gamePhase === 'selectingRow' && 'Select a row to take'}
-              {gamePhase === 'resolving' && 'Resolving...'}
-            </span>
-          </div>
+    <div className="h-screen bg-gradient-to-b from-green-800 to-green-900 overflow-hidden flex flex-col">
+      {/* Compact Header */}
+      <div className="flex justify-between items-center px-6 py-2 text-white">
+        <h1 className="text-xl font-bold">6 nimmt!</h1>
+        <div className="flex items-center gap-4">
+          <span className="text-sm">Round {currentRoundNumber}</span>
+          <span className="text-xs px-2 py-1 bg-white/20 rounded-full">
+            {gamePhase === 'selecting' && 'Select a card'}
+            {gamePhase === 'selectingRow' && 'Select a row to take'}
+            {gamePhase === 'resolving' && 'Resolving...'}
+          </span>
         </div>
+      </div>
 
-        {/* Score and Board */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Board board={game.board} />
-          </div>
-          <div className="space-y-4">
-            <ScoreBoard 
-              players={game.players} 
-              currentPlayerIndex={0}
-              currentRound={currentRoundNumber}
-            />
-            <GameLog entries={logEntries} />
-          </div>
+      {/* Main Game Area - Fixed height instead of flex-1 */}
+      <div className="h-[60vh] flex gap-4 px-6">
+        {/* Board Area - Center/Left */}
+        <div className="flex-1 flex items-center justify-center">
+          <Board board={game.board} className="w-full max-w-5xl" />
         </div>
+        
+        {/* Side Panel - Right */}
+        <div className="w-80 flex flex-col gap-3 py-4">
+          <ScoreBoard 
+            players={game.players} 
+            currentPlayerIndex={0}
+            currentRound={currentRoundNumber}
+            className="bg-white/10 backdrop-blur text-white"
+          />
+          <GameLog 
+            entries={logEntries} 
+            className="flex-1 bg-white/10 backdrop-blur text-white max-h-[50vh] overflow-y-auto"
+          />
+        </div>
+      </div>
 
         {/* Row Selection Modal */}
         {showRowSelection && rowSelection && (
@@ -184,51 +190,33 @@ export default function GamePage() {
           </div>
         )}
 
-        {/* Player Hand */}
-        <div className="bg-white rounded-lg shadow p-4">
-          <PlayerHand
-            cards={humanPlayer.hand}
-            selectedCard={selectedCard}
-            onCardSelect={handleCardSelect}
-            playerName="You"
-            disabled={gamePhase !== 'selecting'}
-          />
-          
-          {/* Submit button */}
-          {gamePhase === 'selecting' && (
-            <div className="mt-4 flex justify-center">
-              <button
-                onClick={handleSubmitTurn}
-                disabled={!selectedCard}
-                className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                  selectedCard
-                    ? 'bg-green-500 text-white hover:bg-green-600'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                {selectedCard ? `Play Card ${selectedCard.number}` : 'Select a Card'}
-              </button>
-            </div>
-          )}
-        </div>
-
-        {/* Other Players' Hands (hidden) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {game.players.slice(1).map((player) => (
-            <div key={player.index} className="bg-white rounded-lg shadow p-4">
-              <h3 className="font-semibold mb-2">{player.name}'s Hand</h3>
-              <div className="flex gap-2">
-                {player.hand.map((_, index) => (
-                  <div
-                    key={index}
-                    className="w-12 h-16 bg-gray-200 rounded border-2 border-gray-400"
-                  />
-                ))}
-              </div>
-              <p className="text-sm text-gray-600 mt-2">{player.hand.length} cards</p>
-            </div>
-          ))}
-        </div>
+      {/* Player Hand Area - Bottom - Takes remaining space */}
+      <div className="flex-1 px-6 pb-2 flex flex-col justify-center">
+        <PlayerHand
+          cards={humanPlayer.hand}
+          selectedCard={selectedCard}
+          onCardSelect={handleCardSelect}
+          playerName="You"
+          disabled={gamePhase !== 'selecting'}
+          className="bg-transparent"
+        />
+        
+        {/* Submit button */}
+        {gamePhase === 'selecting' && (
+          <div className="mt-2 flex justify-center">
+            <button
+              onClick={handleSubmitTurn}
+              disabled={!selectedCard}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                selectedCard
+                  ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400 shadow-lg'
+                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {selectedCard ? `Play Card ${selectedCard.number}` : 'Select a Card'}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )

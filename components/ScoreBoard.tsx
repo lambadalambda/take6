@@ -39,12 +39,12 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
   }
 
   return (
-    <div data-testid="scoreboard" className={`p-4 bg-white rounded-lg shadow ${className}`.trim()}>
+    <div data-testid="scoreboard" className={`p-4 rounded-lg ${className}`.trim()}>
       {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Scoreboard</h2>
+      <div className="flex justify-between items-center mb-3">
+        <h2 className="text-lg font-semibold">Scores</h2>
         {currentRound && (
-          <span className="text-sm text-gray-600">Round {currentRound}</span>
+          <span className="text-sm opacity-60">R{currentRound}</span>
         )}
       </div>
 
@@ -60,18 +60,18 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
             <div
               key={player.index}
               data-testid={`player-row-${originalIndex}`}
-              className={`flex items-center justify-between p-3 rounded ${
-                isCurrentPlayer ? 'bg-blue-100 border-2 border-blue-400' : 'bg-gray-50'
+              className={`flex items-center justify-between p-2 rounded ${
+                isCurrentPlayer ? 'bg-white/20 border border-white/40' : 'bg-white/10'
               }`}
             >
-              <div className="flex items-center gap-3">
-                <span className="font-medium">{player.name}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm">{player.name}</span>
                 {isLeader && (
                   <span 
                     data-testid="leader-badge"
-                    className="text-xs bg-green-500 text-white px-2 py-1 rounded"
+                    className="text-xs"
                   >
-                    Leader
+                    👑
                   </span>
                 )}
               </div>
@@ -80,7 +80,7 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
                 {nearLimit && (
                   <span
                     data-testid={`warning-${originalIndex}`}
-                    className="text-yellow-500"
+                    className="text-yellow-400"
                     title="Near 66 point limit!"
                   >
                     ⚠️
@@ -88,8 +88,8 @@ export const ScoreBoard: React.FC<ScoreBoardProps> = ({
                 )}
                 <span
                   data-testid={`score-${originalIndex}`}
-                  className={`font-bold text-lg ${
-                    nearLimit ? 'text-red-600' : 'text-gray-800'
+                  className={`font-bold ${
+                    nearLimit ? 'text-red-400' : ''
                   }`}
                 >
                   {player.score}

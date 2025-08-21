@@ -15,7 +15,7 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
   }
 
   return (
-    <div data-testid="board" className={`space-y-4 ${className}`.trim()}>
+    <div data-testid="board" className={`space-y-3 px-12 ${className}`.trim()}>
       {board.map((row, rowIndex) => {
         const isFull = row.length === MAX_CARDS_PER_ROW
         const bullHeadTotal = calculateRowBullHeads(row)
@@ -24,21 +24,21 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
           <div
             key={rowIndex}
             data-testid={`row-${rowIndex}`}
-            className={`p-4 rounded-lg border-2 ${
-              isFull ? 'bg-yellow-50 border-yellow-400' : 'bg-gray-50 border-gray-300'
-            }`}
+            className={`relative ${isFull ? 'animate-pulse' : ''}`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-lg font-semibold">Row {rowIndex + 1}</h3>
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Bull Heads:</span>
-                <span 
-                  data-testid={`row-${rowIndex}-bullheads`}
-                  className="font-bold text-red-600"
-                >
-                  {bullHeadTotal}
-                </span>
-              </div>
+            {/* Row indicator */}
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-white/60 text-sm font-bold">
+              R{rowIndex + 1}
+            </div>
+            
+            {/* Bull head count */}
+            <div className="absolute -right-12 top-1/2 -translate-y-1/2 text-white/80">
+              <span 
+                data-testid={`row-${rowIndex}-bullheads`}
+                className={`font-bold text-lg ${bullHeadTotal > 10 ? 'text-red-400' : bullHeadTotal > 5 ? 'text-yellow-400' : 'text-white/60'}`}
+              >
+                🐮 {bullHeadTotal}
+              </span>
             </div>
             
             <div className="flex gap-2">
@@ -52,9 +52,9 @@ export const Board: React.FC<BoardProps> = ({ board, className = '' }) => {
                 <div
                   key={`empty-${i}`}
                   data-testid="empty-slot"
-                  className="border-2 border-dashed border-gray-300 rounded-lg w-28 h-40 flex items-center justify-center"
+                  className="border-2 border-dashed border-white/20 rounded-lg w-28 h-40 flex items-center justify-center backdrop-blur-sm"
                 >
-                  <span className="text-gray-400">Empty</span>
+                  <span className="text-white/20 text-xs">•</span>
                 </div>
               ))}
             </div>
