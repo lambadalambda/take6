@@ -9,7 +9,6 @@ export type SmartBot = {
 
 export type BotDecision = {
   card: Card
-  chosenRow?: number
 }
 
 export const createSmartBot = (name: string): SmartBot => {
@@ -91,7 +90,7 @@ export const selectCardForSmartBot = (bot: SmartBot, player: Player, board: Boar
         const bestRowIndex = board.findIndex(row => 
           row.reduce((sum, c) => sum + c.bullHeads, 0) === minRowPenalty
         )
-        return { card: lowestCard, chosenRow: bestRowIndex }
+        return { card: lowestCard }
       }
     }
     
@@ -116,6 +115,5 @@ export const selectCardForSmartBot = (bot: SmartBot, player: Player, board: Boar
   
   return {
     card: lowestCard,
-    chosenRow: bestRow
   }
 }

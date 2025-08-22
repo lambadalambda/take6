@@ -117,13 +117,11 @@ describe('Bot Integration with Game Engine', () => {
     const bot = createEasyBot('Bot1')
     const botPlayer = gameState.players[1]
     
-    // Bot should decide to take a row
+    // Bot should select the card (row selection happens during resolution)
     const decision = selectCardForBot(bot, botPlayer, gameState.board)
     
     expect(decision.card.number).toBe(5)
-    expect(decision.chosenRow).toBeDefined()
-    expect(decision.chosenRow).toBeGreaterThanOrEqual(0)
-    expect(decision.chosenRow).toBeLessThanOrEqual(3)
+    // Row selection now happens automatically during resolution
   })
 
   it('should play multiple complete turns', () => {

@@ -1,7 +1,6 @@
 import { 
   createEasyBot,
   selectCardForBot,
-  selectRowForBot,
   type Bot,
   type BotDecision
 } from '../easyBot'
@@ -76,55 +75,6 @@ describe('Easy Bot', () => {
     })
   })
 
-  describe('Row selection for too-low cards', () => {
-    it('should select a random row when card is too low', () => {
-      const bot = createEasyBot('TestBot')
-      const board: Board = createBoard([
-        createCard(50),
-        createCard(60),
-        createCard(70),
-        createCard(80)
-      ])
-      
-      const lowCard = createCard(5)
-      const rowChoice = selectRowForBot(bot, lowCard, board)
-      
-      expect(rowChoice).toBeGreaterThanOrEqual(0)
-      expect(rowChoice).toBeLessThanOrEqual(3)
-    })
-
-    it('should return valid row index', () => {
-      const bot = createEasyBot('TestBot')
-      const board: Board = createBoard([
-        createCard(10),
-        createCard(20),
-        createCard(30),
-        createCard(40)
-      ])
-      
-      // Run multiple times to ensure randomness doesn't break bounds
-      for (let i = 0; i < 20; i++) {
-        const rowChoice = selectRowForBot(bot, createCard(1), board)
-        expect(rowChoice).toBeGreaterThanOrEqual(0)
-        expect(rowChoice).toBeLessThanOrEqual(3)
-      }
-    })
-
-    it('should work with partially filled rows', () => {
-      const bot = createEasyBot('TestBot')
-      const board: Board = [
-        [createCard(10), createCard(15), createCard(18)],
-        [createCard(20)],
-        [createCard(30), createCard(35)],
-        [createCard(40), createCard(45), createCard(48), createCard(49)]
-      ]
-      
-      const rowChoice = selectRowForBot(bot, createCard(5), board)
-      
-      expect(rowChoice).toBeGreaterThanOrEqual(0)
-      expect(rowChoice).toBeLessThanOrEqual(3)
-    })
-  })
 
   describe('Bot decision making', () => {
     it('should return decision with card and optional row', () => {
@@ -143,10 +93,10 @@ describe('Easy Bot', () => {
       const decision = selectCardForBot(bot, player, board)
       
       expect(decision.card.number).toBe(25)
-      expect(decision.chosenRow).toBeUndefined() // Card can be placed normally
+      // No row pre-selection anymore
     })
 
-    it('should include row choice when card is too low', () => {
+    it('should handle card that is too low', () => {
       const bot = createEasyBot('TestBot')
       const player: Player = {
         ...createPlayer('TestBot', 0),
@@ -162,9 +112,7 @@ describe('Easy Bot', () => {
       const decision = selectCardForBot(bot, player, board)
       
       expect(decision.card.number).toBe(5)
-      expect(decision.chosenRow).toBeDefined()
-      expect(decision.chosenRow).toBeGreaterThanOrEqual(0)
-      expect(decision.chosenRow).toBeLessThanOrEqual(3)
+      // Row selection now happens automatically during resolution
     })
 
     it('should handle mixed scenarios', () => {
@@ -198,7 +146,8 @@ describe('Easy Bot', () => {
       ])
       
       const decision2 = selectCardForBot(bot, player2, board2)
-      expect(decision2.chosenRow).toBeDefined()
+      // Easy bot picks randomly, so just verify it picked from the hand
+      expect([1, 2, 3]).toContain(decision2.card.number)
     })
   })
 })

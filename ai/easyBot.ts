@@ -1,5 +1,5 @@
 import { type Card } from '../engine/card'
-import { type Board, getRowForCard } from '../engine/board'
+import { type Board } from '../engine/board'
 import { type Player } from '../engine/player'
 
 export type BotDifficulty = 'easy' | 'medium' | 'hard'
@@ -11,7 +11,6 @@ export type Bot = {
 
 export type BotDecision = {
   card: Card
-  chosenRow?: number
 }
 
 export const createEasyBot = (name: string): Bot => {
@@ -30,10 +29,6 @@ const getRandomElement = <T>(array: T[]): T => {
   return array[randomIndex]
 }
 
-export const selectRowForBot = (bot: Bot, card: Card, board: Board): number => {
-  // Easy bot just picks a random row (0-3)
-  return Math.floor(Math.random() * 4)
-}
 
 export const selectCardForBot = (bot: Bot, player: Player, board: Board): BotDecision => {
   if (player.hand.length === 0) {
@@ -43,12 +38,7 @@ export const selectCardForBot = (bot: Bot, player: Player, board: Board): BotDec
   // Easy bot: pick a random card
   const selectedCard = getRandomElement(player.hand)
   
-  // Check if this card is too low for any row
-  const targetRow = board.length > 0 ? getRowForCard(board, selectedCard) : 0
-  const needsRowChoice = board.length > 0 && targetRow === -1
-  
   return {
-    card: selectedCard,
-    chosenRow: needsRowChoice ? selectRowForBot(bot, selectedCard, board) : undefined
+    card: selectedCard
   }
 }

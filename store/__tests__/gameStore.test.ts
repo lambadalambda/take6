@@ -4,14 +4,18 @@ import { createCard } from '../../engine/card'
 
 describe('Game Store', () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     // Reset store before each test
     useGameStore.setState({
       game: null,
       selectedCard: null,
-      gamePhase: 'waiting',
-      rowSelection: null,
+      gamePhase: 'selecting',
       logEntries: []
     })
+  })
+  
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   it('should initialize game with player names', () => {
@@ -32,10 +36,19 @@ describe('Game Store', () => {
     
     act(() => {
       result.current.initializeGame(['Alice', 'Bot1', 'Bot2', 'Bot3'])
-      result.current.startNewRound()
+      // initializeGame now starts the first round automatically
     })
     
     expect(result.current.game?.currentRound).toBe(1)
+    expect(result.current.game?.board).toHaveLength(4)
+    expect(result.current.game?.players[0].hand).toHaveLength(10)
+    
+    // Test starting a second round
+    act(() => {
+      result.current.startNewRound()
+    })
+    
+    expect(result.current.game?.currentRound).toBe(2)
     expect(result.current.game?.board).toHaveLength(4)
     expect(result.current.game?.players[0].hand).toHaveLength(10)
   })
@@ -131,11 +144,23 @@ describe('Game Store', () => {
     act(() => {
       result.current.selectCard(lowCard)
       result.current.submitTurn()
-      // Row selection is determined at resolution time
-      result.current.resolveCurrentRound()
     })
     
-    // Should auto-select row and continue
+    // Now resolve step by step
+    act(() => {
+      result.current.startResolution()
+    })
+    
+    expect(result.current.gamePhase).toBe('resolvingStep')
+    
+    // Process all cards (4 players)
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        jest.runAllTimers()
+      })
+    }
+    
+    // Should complete and go back to selecting
     expect(result.current.gamePhase).toBe('selecting')
   })
 
@@ -174,12 +199,23 @@ describe('Game Store', () => {
     act(() => {
       result.current.selectCard(lowCard2)
       result.current.submitTurn()
-      result.current.resolveCurrentRound() // auto-selects row
     })
+    
+    // Start resolution
+    act(() => {
+      result.current.startResolution()
+    })
+    
+    // Process all cards with timers
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        jest.runAllTimers()
+      })
+    }
 
     // Should auto-select row and continue
     expect(result.current.gamePhase).toBe('selecting')
-    expect(result.current.rowSelection).toBeNull()
+    // No row selection state anymore
   })
 
   it('should resolve round after all players ready', () => {
@@ -217,10 +253,17 @@ describe('Game Store', () => {
       result.current.submitTurn() // This will have bots select too
     })
     
-    // Now resolve
+    // Start resolution
     act(() => {
-      result.current.resolveCurrentRound()
+      result.current.startResolution()
     })
+    
+    // Process all cards with timers
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        jest.runAllTimers()
+      })
+    }
     
     // After resolution, cards should be placed on board
     const totalBoardCards = result.current.game?.board.reduce((sum, row) => sum + row.length, 0) || 0
@@ -260,7 +303,7 @@ describe('Game Store', () => {
     
     expect(result.current.game).toBeNull()
     expect(result.current.selectedCard).toBeNull()
-    expect(result.current.gamePhase).toBe('waiting')
+    expect(result.current.gamePhase).toBe('selecting')
   })
 
   it('should generate log entries when resolving round', () => {
@@ -296,8 +339,19 @@ describe('Game Store', () => {
     act(() => {
       result.current.selectCard(humanCard!)
       result.current.submitTurn()
-      result.current.resolveCurrentRound()
     })
+    
+    // Start resolution
+    act(() => {
+      result.current.startResolution()
+    })
+    
+    // Process all cards with timers
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        jest.runAllTimers()
+      })
+    }
     
     // Should have log entries for all 4 players
     expect(result.current.logEntries).toHaveLength(4)
@@ -343,8 +397,19 @@ describe('Game Store', () => {
     act(() => {
       result.current.selectCard(humanCard)
       result.current.submitTurn()
-      result.current.resolveCurrentRound()
     })
+    
+    // Start resolution
+    act(() => {
+      result.current.startResolution()
+    })
+    
+    // Process all cards with timers
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        jest.runAllTimers()
+      })
+    }
     
     // Find Alice's log entry
     const aliceEntry = result.current.logEntries.find(e => e.player === 'Alice')

@@ -21,7 +21,6 @@ export default function GamePage() {
     startNewRound,
     selectCard,
     submitTurn,
-    resolveCurrentRound,
     startResolution,
     processNextCard,
     isGameOver,
@@ -74,13 +73,6 @@ export default function GamePage() {
     }
   }, [game, initializeGame, startNewRound])
 
-  // Handle game phase changes
-  useEffect(() => {
-    if (gamePhase === 'resolving') {
-      // Old flow - immediately resolve
-      resolveCurrentRound()
-    }
-  }, [gamePhase, resolveCurrentRound])
 
   const handleCardSelect = (card: Card) => {
     if (gamePhase === 'selecting') {
@@ -235,7 +227,6 @@ export default function GamePage() {
             {gamePhase === 'selecting' && 'Select a card'}
             {gamePhase === 'revealing' && 'Revealing cards...'}
             {gamePhase === 'resolvingStep' && 'Placing cards...'}
-            {gamePhase === 'resolving' && 'Resolving...'}
           </span>
         </div>
       </div>

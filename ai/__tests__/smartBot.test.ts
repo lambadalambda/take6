@@ -35,7 +35,7 @@ describe('Smart Bot', () => {
       
       // Should pick 15 as it's the lowest safe card
       expect(decision.card.number).toBe(15)
-      expect(decision.chosenRow).toBeUndefined()
+      // No row pre-selection anymore
     })
 
     it('should avoid cards that would be 6th in a row', () => {
@@ -55,7 +55,7 @@ describe('Smart Bot', () => {
       
       // Should skip 15 (would be 6th card) and pick 25
       expect(decision.card.number).toBe(25)
-      expect(decision.chosenRow).toBeUndefined()
+      // No row pre-selection anymore
     })
 
     it('should choose card with minimum penalty if all cards cause penalties', () => {
@@ -77,7 +77,7 @@ describe('Smart Bot', () => {
       expect([16, 17, 18]).toContain(decision.card.number)
     })
 
-    it('should choose row with minimum bull heads when card is too low', () => {
+    it('should handle card that is too low', () => {
       const bot = createSmartBot('TestBot')
       const player: Player = {
         ...createPlayer('TestBot', 0),
@@ -93,7 +93,7 @@ describe('Smart Bot', () => {
       const decision = selectCardForSmartBot(bot, player, board)
       
       expect(decision.card.number).toBe(5)
-      expect(decision.chosenRow).toBe(3) // Row with minimum bull heads
+      // Row selection happens automatically during resolution
     })
 
     it('should handle hand with only too-low cards', () => {
@@ -113,7 +113,7 @@ describe('Smart Bot', () => {
       
       // Should pick lowest card (1) and choose row with least bull heads
       expect(decision.card.number).toBe(1)
-      expect(decision.chosenRow).toBeDefined()
+      // Row selection happens automatically during resolution
     })
 
     it('should prefer lower cards when multiple safe options exist', () => {
@@ -151,7 +151,7 @@ describe('Smart Bot', () => {
       const decision = selectCardForSmartBot(bot, player, board)
       
       expect(decision.card.number).toBe(42)
-      expect(decision.chosenRow).toBeUndefined()
+      // No row pre-selection anymore
     })
 
     it('should handle empty board', () => {
@@ -166,7 +166,7 @@ describe('Smart Bot', () => {
       
       // With empty board, just pick lowest card
       expect(decision.card.number).toBe(10)
-      expect(decision.chosenRow).toBeUndefined()
+      // No row pre-selection anymore
     })
 
     it('should throw error if hand is empty', () => {

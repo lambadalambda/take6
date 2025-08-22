@@ -3,11 +3,9 @@ import {
   createGame,
   initializeRound,
   selectCardForPlayer,
-  resolveRound,
   isGameOver as checkGameOver,
   getWinner as findWinner,
   getAllPlayersReady,
-  setChosenRowForPlayer,
   type Game 
 } from '../engine/game'
 import { addPenaltyCards } from '../engine/player'
@@ -16,12 +14,8 @@ import { type Card } from '../engine/card'
 import { createSmartBot, selectCardForSmartBot } from '../ai/smartBot'
 import { type LogEntry } from '../components/GameLog'
 
-export type GamePhase = 'waiting' | 'selecting' | 'revealing' | 'resolvingStep' | 'resolving' | 'gameOver'
+export type GamePhase = 'selecting' | 'revealing' | 'resolvingStep' | 'gameOver'
 
-export type RowSelectionState = {
-  playerIndex: number
-  card: Card
-}
 
 export type ResolutionResult = {
   card: Card
@@ -35,7 +29,6 @@ export type GameStore = {
   game: Game | null
   selectedCard: Card | null
   gamePhase: GamePhase
-  rowSelection: RowSelectionState | null
   logEntries: LogEntry[]
   
   // Resolution state
@@ -48,8 +41,6 @@ export type GameStore = {
   startNewRound: () => void
   selectCard: (card: Card) => void
   submitTurn: () => void
-  selectRow: (rowIndex: number) => void
-  resolveCurrentRound: () => void
   
   // New step-by-step resolution actions
   startResolution: () => void
@@ -64,8 +55,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // Initial state
   game: null,
   selectedCard: null,
-  gamePhase: 'waiting',
-  rowSelection: null,
+  gamePhase: 'selecting',
   logEntries: [],
   
   // Resolution state
@@ -76,7 +66,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   // Actions
   initializeGame: (playerNames) => {
     const game = createGame({ playerNames })
-    set({ game, gamePhase: 'selecting', selectedCard: null })
+    const initializedGame = initializeRound(game)
+    set({ game: initializedGame, gamePhase: 'selecting', selectedCard: null })
   },
   
   startNewRound: () => {
@@ -117,8 +108,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
       updatedGame = selectCardForPlayer(
         updatedGame,
         i,
-        decision.card,
-        decision.chosenRow
+        decision.card
       )
     }
     
@@ -126,89 +116,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ game: updatedGame, selectedCard: null, gamePhase: 'revealing' })
   },
   
-  selectRow: () => {
-    // This function is no longer used since we auto-select rows
-    // Keeping it as a no-op for backward compatibility
-    return
-  },
-  
-  resolveCurrentRound: () => {
-    const { game } = get()
-    if (!game || !getAllPlayersReady(game)) return
-    // Simulate resolution step-by-step to determine if any row choice is needed now
-    let workGame = game
-    let tempBoard = game.board
-    const newLogEntries: LogEntry[] = []
-    const selections = [...game.playerSelections].sort((a, b) => a.card.number - b.card.number)
-
-    for (const selection of selections) {
-      const { playerIndex, card } = selection
-      const player = workGame.players[playerIndex]
-      const targetRow = getRowForCard(tempBoard, card)
-
-      if (targetRow === -1) {
-        // Needs a row choice; if not provided yet, handle based on human vs bot
-        const currentSelection = workGame.playerSelections.find(s => s.playerIndex === playerIndex)!
-        let chosenRow = currentSelection.chosenRow
-
-        if (chosenRow === undefined) {
-          // Auto-select row with minimum bull heads for all players
-          let minHeads = Infinity
-          let bestRow = 0
-          for (let i = 0; i < tempBoard.length; i++) {
-            const heads = tempBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
-            if (heads < minHeads) { minHeads = heads; bestRow = i }
-          }
-          workGame = setChosenRowForPlayer(workGame, playerIndex, bestRow)
-          chosenRow = bestRow
-        }
-
-        // Apply takeRow to simulated board and log
-        const takenCards = tempBoard[chosenRow!]
-        const bullHeads = takenCards.reduce((sum, c) => sum + c.bullHeads, 0)
-        newLogEntries.push({
-          player: player.name,
-          card: card.number,
-          action: 'took-row',
-          row: (chosenRow as number) + 1,
-          penaltyCards: takenCards.length,
-          bullHeads
-        })
-        tempBoard = takeRow(tempBoard, chosenRow!, card).board
-      } else {
-        const row = tempBoard[targetRow]
-        if (row.length >= 5) {
-          const bullHeads = row.reduce((sum, c) => sum + c.bullHeads, 0)
-          newLogEntries.push({
-            player: player.name,
-            card: card.number,
-            action: 'sixth-card',
-            row: targetRow + 1,
-            penaltyCards: row.length,
-            bullHeads
-          })
-        } else {
-          newLogEntries.push({
-            player: player.name,
-            card: card.number,
-            action: 'placed',
-            row: targetRow + 1
-          })
-        }
-        tempBoard = placeCard(tempBoard, targetRow, card).board
-      }
-    }
-
-    // If we complete the loop, we can fully resolve the round now
-    const resolved = resolveRound(workGame)
-    
-    // Check if game is over
-    if (checkGameOver(resolved)) {
-      set({ game: resolved, gamePhase: 'gameOver', logEntries: newLogEntries })
-    } else {
-      set({ game: resolved, gamePhase: 'selecting', logEntries: newLogEntries })
-    }
-  },
   
   isGameOver: () => {
     const { game } = get()
@@ -230,8 +137,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({
       game: null,
       selectedCard: null,
-      gamePhase: 'waiting',
-      rowSelection: null,
+      gamePhase: 'selecting',
       logEntries: [],
       resolutionIndex: 0,
       resolutionBoard: null,
@@ -354,8 +260,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     // Process the placement
     const result = processCardPlacementStep(resolutionBoard, {
       card: currentSelection.card,
-      playerIndex: currentSelection.playerIndex,
-      chosenRow: currentSelection.chosenRow
+      playerIndex: currentSelection.playerIndex
     })
     
     if (result.needsRowSelection) {
