@@ -1,6 +1,50 @@
 import React from 'react'
 import { type Card as CardType } from '../engine/card'
 
+// Add animated gradient border styles
+const animatedBorderStyles = `
+  @keyframes gradientRotate {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  
+  .selected-card-border {
+    position: relative;
+  }
+  
+  .selected-card-border::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 12px;
+    padding: 4px;
+    background: linear-gradient(
+      90deg,
+      #3b82f6,
+      #8b5cf6,
+      #ec4899,
+      #ef4444,
+      #f59e0b,
+      #10b981,
+      #3b82f6
+    );
+    background-size: 200% 200%;
+    animation: gradientRotate 3s linear infinite;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    z-index: -1;
+  }
+`
+
 export type CardProps = {
   card: CardType
   onClick?: (card: CardType) => void
@@ -43,7 +87,7 @@ export const Card: React.FC<CardProps> = ({
   const sizeClasses = size === 'small' ? 'w-20 h-28' : 'w-28 h-40'
   const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800 rounded-lg shadow-md transition-all ${sizeClasses}`
   const interactiveClasses = onClick && !disabled ? 'cursor-pointer hover:shadow-lg hover:scale-105' : ''
-  const selectedClasses = selected ? 'ring-4 ring-blue-500' : ''
+  const selectedClasses = selected ? 'selected-card-border' : ''
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : ''
 
   // Split bull heads into rows if more than 5
@@ -61,11 +105,13 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return (
-    <div
-      data-testid="card"
-      className={`${baseClasses} ${interactiveClasses} ${selectedClasses} ${disabledClasses} ${className}`.trim()}
-      onClick={handleClick}
-    >
+    <>
+      {selected && <style dangerouslySetInnerHTML={{ __html: animatedBorderStyles }} />}
+      <div
+        data-testid="card"
+        className={`${baseClasses} ${interactiveClasses} ${selectedClasses} ${disabledClasses} ${className}`.trim()}
+        onClick={handleClick}
+      >
       {/* Corner numbers */}
       <div className={`absolute top-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold -rotate-45`}>{card.number}</div>
       <div className={`absolute top-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold rotate-45`}>{card.number}</div>
@@ -117,5 +163,6 @@ export const Card: React.FC<CardProps> = ({
         </div>
       </div>
     </div>
+    </>
   )
 }
