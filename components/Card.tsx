@@ -80,7 +80,7 @@ export const Card: React.FC<CardProps> = ({
     }
   }
 
-  const sizeClasses = size === 'small' ? 'w-20 h-28' : 'w-28 h-40'
+  const sizeClasses = size === 'small' ? 'w-18 h-24' : 'w-28 h-40'
   const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800/90 rounded-xl shadow-md transition-all ${sizeClasses} card-foil card-inner-shadow`
   const interactiveClasses = onClick && !disabled ? 'cursor-pointer hover:shadow-xl hover:scale-105' : ''
   const selectedClasses = selected ? 'selected-card-border' : ''

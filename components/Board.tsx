@@ -108,7 +108,7 @@ export const Board: React.FC<BoardProps> = ({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: breathingStyles }} />
-      <div data-testid="board" className={`space-y-3 px-12 ${className}`.trim()}>
+      <div data-testid="board" className={`space-y-2 px-12 ${className}`.trim()}>
       {board.map((row, rowIndex) => {
         const isFull = row.length === MAX_CARDS_PER_ROW
         const bullHeadTotal = calculateRowBullHeads(row)
@@ -134,7 +134,7 @@ export const Board: React.FC<BoardProps> = ({
               </span>
             </div>
             
-            <div className="flex gap-3 board-row-container rounded-xl bg-white/5 backdrop-blur-md p-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
+            <div className="flex gap-2 board-row-container rounded-xl bg-white/5 backdrop-blur-md p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
               {/* Render existing cards */}
               {row.map((card, cardIndex) => (
                 <div 
@@ -163,7 +163,7 @@ export const Board: React.FC<BoardProps> = ({
                 <div
                   key={`empty-${i}`}
                   data-testid="empty-slot"
-                  className="rounded-xl w-20 h-28 flex items-center justify-center bg-white/5 border border-white/10 shadow-[0_0_18px_rgba(34,211,238,0.15)]"
+                  className="rounded-xl w-18 h-24 flex items-center justify-center bg-white/5 border border-white/10 shadow-[0_0_18px_rgba(34,211,238,0.15)]"
                 >
                   <span className="text-white/30 text-xs">•</span>
                 </div>

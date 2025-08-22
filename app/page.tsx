@@ -253,9 +253,9 @@ export default function GamePage() {
       </div>
 
       {/* Main Game Area - Takes available space between header and player hand */}
-      <div className="flex-1 flex gap-4 px-6 py-2 relative z-10">
+      <div className="flex-1 flex gap-4 px-6 py-1 relative z-10 overflow-y-auto">
         {/* Board Area - Center/Left */}
-        <div className="flex-1 flex items-center justify-center">
+        <div className="flex-1 flex items-start justify-center pt-4">
           <Board 
             board={game.board} 
             className="w-full max-w-5xl"
@@ -320,7 +320,7 @@ export default function GamePage() {
         )}
 
       {/* Player Hand Area - Bottom - Fixed height */}
-      <div className="h-56 px-6 pb-2 relative z-10">
+      <div className="h-48 px-6 pb-2 relative z-10">
         <PlayerHand
           cards={humanPlayer.hand}
           selectedCard={selectedCard}
@@ -332,11 +332,11 @@ export default function GamePage() {
         
         {/* Submit button */}
         {gamePhase === 'selecting' && (
-          <div className="mt-2 flex justify-center">
+          <div className="mt-1 flex justify-center">
             <button
               onClick={handleSubmitTurn}
               disabled={!selectedCard}
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+              className={`px-4 py-1.5 rounded-lg font-medium text-sm transition-colors ${
                 selectedCard
                   ? 'bg-yellow-500 text-gray-900 hover:bg-yellow-400 shadow-lg'
                   : 'bg-gray-600 text-gray-400 cursor-not-allowed'
