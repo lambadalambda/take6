@@ -1,48 +1,44 @@
 import React from 'react'
 import { type Card as CardType } from '../engine/card'
 
-// Add animated gradient border styles
-const animatedBorderStyles = `
-  @keyframes gradientRotate {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-  
-  .selected-card-border {
+// Visual styles: foil sheen, inner shadow, and a simple selected glow (no animated border)
+const visualStyles = `
+  /* Holographic foil sheen */
+  .card-foil {
     position: relative;
+    overflow: hidden;
+    isolation: isolate;
   }
-  
-  .selected-card-border::before {
+  .card-foil::after {
     content: '';
     position: absolute;
-    inset: -4px;
-    border-radius: 12px;
-    padding: 4px;
-    background: linear-gradient(
-      90deg,
-      #3b82f6,
-      #8b5cf6,
-      #ec4899,
-      #ef4444,
-      #f59e0b,
-      #10b981,
-      #3b82f6
+    inset: 0;
+    border-radius: inherit;
+    background: conic-gradient(
+      from 180deg at 50% 50%,
+      rgba(236, 72, 153, 0.16),
+      rgba(34, 211, 238, 0.12),
+      rgba(139, 92, 246, 0.14),
+      rgba(34, 197, 94, 0.12),
+      rgba(236, 72, 153, 0.16)
     );
-    background-size: 200% 200%;
-    animation: gradientRotate 3s linear infinite;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    z-index: -1;
+    mix-blend-mode: overlay;
+    filter: blur(10px) saturate(115%);
+    animation: foilSweep 8s linear infinite;
+    pointer-events: none;
+    z-index: 1;
   }
+  @keyframes foilSweep {
+    0% { transform: translateX(-12%) rotate(0deg) scale(1.03); opacity: 0.65; }
+    50% { transform: translateX(12%) rotate(180deg) scale(1.00); opacity: 0.45; }
+    100% { transform: translateX(-12%) rotate(360deg) scale(1.03); opacity: 0.65; }
+  }
+
+  /* Subtle inner shadow for depth */
+  .card-inner-shadow { box-shadow: inset 0 2px 6px rgba(0,0,0,0.15), inset 0 -6px 12px rgba(0,0,0,0.12); }
+
+  /* Selected state: static glow ring (no animation) */
+  .selected-card-border { box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.8), 0 0 18px rgba(139, 92, 246, 0.35); }
 `
 
 export type CardProps = {
@@ -85,8 +81,8 @@ export const Card: React.FC<CardProps> = ({
   }
 
   const sizeClasses = size === 'small' ? 'w-20 h-28' : 'w-28 h-40'
-  const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800 rounded-lg shadow-md transition-all ${sizeClasses}`
-  const interactiveClasses = onClick && !disabled ? 'cursor-pointer hover:shadow-lg hover:scale-105' : ''
+  const baseClasses = `relative ${getBackgroundClass()} border-2 border-gray-800/90 rounded-xl shadow-md transition-all ${sizeClasses} card-foil card-inner-shadow`
+  const interactiveClasses = onClick && !disabled ? 'cursor-pointer hover:shadow-xl hover:scale-105' : ''
   const selectedClasses = selected ? 'selected-card-border' : ''
   const disabledClasses = disabled ? 'opacity-50 cursor-not-allowed' : ''
 
@@ -106,17 +102,17 @@ export const Card: React.FC<CardProps> = ({
 
   return (
     <>
-      {selected && <style dangerouslySetInnerHTML={{ __html: animatedBorderStyles }} />}
+      <style dangerouslySetInnerHTML={{ __html: visualStyles }} />
       <div
         data-testid="card"
         className={`${baseClasses} ${interactiveClasses} ${selectedClasses} ${disabledClasses} ${className}`.trim()}
         onClick={handleClick}
       >
       {/* Corner numbers */}
-      <div className={`absolute top-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold -rotate-45`}>{card.number}</div>
-      <div className={`absolute top-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold rotate-45`}>{card.number}</div>
-      <div className={`absolute bottom-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold rotate-45`}>{card.number}</div>
-      <div className={`absolute bottom-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-bold -rotate-45`}>{card.number}</div>
+      <div className={`absolute top-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-extrabold -rotate-45 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]`}>{card.number}</div>
+      <div className={`absolute top-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-extrabold rotate-45 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]`}>{card.number}</div>
+      <div className={`absolute bottom-1 left-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-extrabold rotate-45 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]`}>{card.number}</div>
+      <div className={`absolute bottom-1 right-1 ${size === 'small' ? 'text-[8px]' : 'text-xs'} font-extrabold -rotate-45 drop-shadow-[0_1px_0_rgba(255,255,255,0.6)]`}>{card.number}</div>
       
       {/* Bull head points at top - multiple rows if needed */}
       <div className={`absolute ${size === 'small' ? 'top-2' : 'top-3'} left-0 right-0 ${size === 'small' ? 'px-1' : 'px-2'}`}>
@@ -134,7 +130,9 @@ export const Card: React.FC<CardProps> = ({
       {/* Center content */}
       <div className="absolute inset-0 flex items-center justify-center">
         {/* Larger, more visible cow background */}
-        <div className={`absolute ${size === 'small' ? 'text-5xl' : 'text-8xl'} opacity-30`}>
+        <div className={`absolute ${size === 'small' ? 'text-5xl' : 'text-8xl'} opacity-30`}
+          style={{ filter: 'drop-shadow(0 4px 8px rgba(236,72,153,0.35))' }}
+        >
           🐮
         </div>
         {/* Card number with impact-style border and color based on bull heads */}
@@ -155,7 +153,8 @@ export const Card: React.FC<CardProps> = ({
               -3px 0px 0 #fff,
               3px 0px 0 #fff,
               0px -3px 0 #fff,
-              0px 3px 0 #fff
+              0px 3px 0 #fff,
+              0 0 10px rgba(139,92,246,0.35)
             `
           }}
         >

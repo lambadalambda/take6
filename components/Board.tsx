@@ -58,9 +58,7 @@ const breathingStyles = `
     transform-style: preserve-3d;
   }
   
-  .board-row-container {
-    perspective: 1000px;
-  }
+  .board-row-container { perspective: 1000px; }
 `
 
 export type BoardProps = {
@@ -110,7 +108,7 @@ export const Board: React.FC<BoardProps> = ({
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: breathingStyles }} />
-      <div data-testid="board" className={`space-y-2 px-12 ${className}`.trim()}>
+      <div data-testid="board" className={`space-y-3 px-12 ${className}`.trim()}>
       {board.map((row, rowIndex) => {
         const isFull = row.length === MAX_CARDS_PER_ROW
         const bullHeadTotal = calculateRowBullHeads(row)
@@ -122,7 +120,7 @@ export const Board: React.FC<BoardProps> = ({
             className={`relative ${isFull ? 'animate-pulse' : ''}`}
           >
             {/* Row indicator */}
-            <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-white/60 text-sm font-bold">
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 text-white/60 text-sm font-bold drop-shadow-[0_2px_6px_rgba(139,92,246,0.5)]">
               R{rowIndex + 1}
             </div>
             
@@ -130,18 +128,18 @@ export const Board: React.FC<BoardProps> = ({
             <div className="absolute -right-12 top-1/2 -translate-y-1/2 text-white/80">
               <span 
                 data-testid={`row-${rowIndex}-bullheads`}
-                className={`font-bold text-lg ${bullHeadTotal > 10 ? 'text-red-400' : bullHeadTotal > 5 ? 'text-yellow-400' : 'text-white/60'}`}
+                className={`font-bold text-lg ${bullHeadTotal > 10 ? 'text-red-400' : bullHeadTotal > 5 ? 'text-yellow-400' : 'text-white/60'} drop-shadow-[0_2px_6px_rgba(236,72,153,0.35)]`}
               >
                 🐮 {bullHeadTotal}
               </span>
             </div>
             
-            <div className="flex gap-2 board-row-container">
+            <div className="flex gap-3 board-row-container rounded-xl bg-white/5 backdrop-blur-md p-2 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
               {/* Render existing cards */}
               {row.map((card, cardIndex) => (
                 <div 
                   key={`${rowIndex}-${cardIndex}`} 
-                  className="board-card-animate relative"
+                  className="board-card-animate relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"
                   style={{ animationDelay: `${cardIndex * 0.15 + rowIndex * 0.1}s` }}
                 >
                   <Card card={card} size="small" />
@@ -152,7 +150,7 @@ export const Board: React.FC<BoardProps> = ({
               {getAnimatingCardsForRow(rowIndex).map((animatingCard, index) => (
                 <div 
                   key={`animating-${rowIndex}-${index}`} 
-                  className={animatingCard.isCurrentlyAnimating ? "board-card-growing relative" : "board-card-animate relative"}
+                  className={animatingCard.isCurrentlyAnimating ? "board-card-growing relative drop-shadow-[0_0_14px_rgba(236,72,153,0.35)]" : "board-card-animate relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"}
                 >
                   <Card card={animatingCard.card} size="small" />
                 </div>
@@ -165,9 +163,9 @@ export const Board: React.FC<BoardProps> = ({
                 <div
                   key={`empty-${i}`}
                   data-testid="empty-slot"
-                  className="border-2 border-dashed border-white/20 rounded-lg w-20 h-28 flex items-center justify-center backdrop-blur-sm"
+                  className="rounded-xl w-20 h-28 flex items-center justify-center bg-white/5 border border-white/10 shadow-[0_0_18px_rgba(34,211,238,0.15)]"
                 >
-                  <span className="text-white/20 text-xs">•</span>
+                  <span className="text-white/30 text-xs">•</span>
                 </div>
               ))}
             </div>

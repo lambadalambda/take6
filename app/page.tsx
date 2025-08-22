@@ -33,14 +33,14 @@ export default function GamePage() {
   // Generate lava blob properties with better distribution
   const [lavaBlobs] = useState(() => {
     const colors = [
-      'rgb(34, 197, 94)', // emerald
-      'rgb(74, 222, 128)', // bright green
-      'rgb(21, 128, 61)', // forest green
-      'rgb(134, 239, 172)', // light mint
-      'rgb(22, 163, 74)', // medium green
-      'rgb(5, 150, 105)', // teal green
-      'rgb(16, 185, 129)', // turquoise green
-      'rgb(4, 120, 87)', // deep sea green
+      'rgb(139, 92, 246)',   // violet
+      'rgb(236, 72, 153)',   // pink
+      'rgb(34, 211, 238)',   // cyan
+      'rgb(59, 130, 246)',   // blue
+      'rgb(244, 63, 94)',    // rose
+      'rgb(168, 85, 247)',   // purple
+      'rgb(99, 102, 241)',   // indigo
+      'rgb(219, 39, 119)',   // fuchsia
     ]
     
     // Create a grid-based distribution for better coverage
@@ -211,12 +211,14 @@ export default function GamePage() {
           .lava-blob {
             position: absolute;
             border-radius: 50%;
-            filter: blur(80px);
-            opacity: 0.4;
+            filter: blur(90px);
+            opacity: 0.35;
             mix-blend-mode: screen;
             will-change: transform;
             animation-fill-mode: both;
           }
+          .scanlines { background: repeating-linear-gradient(180deg, rgba(0,0,0,0.15) 0, rgba(0,0,0,0.15) 1px, transparent 2px, transparent 4px); pointer-events: none; }
+          .vignette { box-shadow: inset 0 0 200px rgba(0,0,0,0.55); pointer-events: none; }
         ` }} />
         {lavaBlobs.map((blob) => (
           <div
@@ -234,13 +236,14 @@ export default function GamePage() {
           />
         ))}
       </div>
+      <div className="absolute inset-0 scanlines vignette" />
       
       {/* Compact Header */}
-      <div className="h-12 flex justify-between items-center px-6 text-white relative z-10">
-        <h1 className="text-xl font-bold">6 nimmt!</h1>
+        <div className="h-12 flex justify-between items-center px-6 text-white relative z-10">
+        <h1 className="text-xl font-bold drop-shadow-[0_2px_8px_rgba(236,72,153,0.5)]">6 nimmt!</h1>
         <div className="flex items-center gap-4">
           <span className="text-sm">Round {currentRoundNumber}</span>
-          <span className="text-xs px-2 py-1 bg-white/20 rounded-full">
+          <span className="text-xs px-2 py-1 bg-white/20 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.3)]">
             {gamePhase === 'selecting' && 'Select a card'}
             {gamePhase === 'selectingRow' && 'Select a row to take'}
             {gamePhase === 'revealing' && 'Revealing cards...'}
