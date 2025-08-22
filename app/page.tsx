@@ -276,7 +276,10 @@ export default function GamePage() {
         {gamePhase === 'resolvingStep' && game && (
           <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg">
             <span className="text-sm font-medium">
-              Placing card {resolutionIndex + 1} of {game.playerSelections.length}...
+              {resolutionIndex === 0 ? 'Starting resolution...' : 
+               resolutionIndex < game.playerSelections.length ? 
+               `Placed ${resolutionIndex} of ${game.playerSelections.length}, placing next...` :
+               'Completing resolution...'}
             </span>
           </div>
         )}
