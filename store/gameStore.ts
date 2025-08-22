@@ -7,9 +7,10 @@ import {
   isGameOver as checkGameOver,
   getWinner as findWinner,
   getAllPlayersReady,
+  setChosenRowForPlayer,
   type Game 
 } from '../engine/game'
-import { getRowForCard } from '../engine/board'
+import { getRowForCard, placeCard, takeRow } from '../engine/board'
 import { type Card } from '../engine/card'
 import { createSmartBot, selectCardForSmartBot } from '../ai/smartBot'
 import { type LogEntry } from '../components/GameLog'
@@ -70,20 +71,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
   submitTurn: () => {
     const { game, selectedCard } = get()
     if (!game || !selectedCard) return
-    
-    // Check if card is too low for board
-    const targetRow = getRowForCard(game.board, selectedCard)
-    
-    if (targetRow === -1 && game.board.length > 0) {
-      // Card is too low, need row selection
-      set({ 
-        rowSelection: { playerIndex: 0, card: selectedCard },
-        gamePhase: 'selectingRow'
-      })
-      return
-    }
-    
-    // Select card for human player
+
+    // Select card for human player (no row choice upfront)
     let updatedGame = selectCardForPlayer(game, 0, selectedCard)
     
     // Have bots make their selections
@@ -102,44 +91,45 @@ export const useGameStore = create<GameStore>((set, get) => ({
       )
     }
     
-    set({ 
-      game: updatedGame, 
-      selectedCard: null,
-      gamePhase: 'revealing'
-    })
+    // Pre-check: if human will need to choose a row during resolution, prompt before showing animations
+    let tempBoard = updatedGame.board
+    const sortedSelections = [...updatedGame.playerSelections].sort((a, b) => a.card.number - b.card.number)
+    for (const s of sortedSelections) {
+      const target = getRowForCard(tempBoard, s.card)
+      if (target === -1) {
+        if (s.playerIndex === 0 && s.chosenRow === undefined) {
+          set({ game: updatedGame, selectedCard: null, rowSelection: { playerIndex: 0, card: s.card }, gamePhase: 'selectingRow' })
+          return
+        }
+        // Simulate taking a row
+        const rowIndex = s.chosenRow !== undefined ? s.chosenRow : (() => {
+          let min = Infinity, best = 0
+          for (let i = 0; i < tempBoard.length; i++) {
+            const heads = tempBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
+            if (heads < min) { min = heads; best = i }
+          }
+          return best
+        })()
+        tempBoard = takeRow(tempBoard, rowIndex, s.card).board
+      } else {
+        tempBoard = placeCard(tempBoard, target, s.card).board
+      }
+    }
+
+    // No immediate human row choice; proceed to revealing animations
+    set({ game: updatedGame, selectedCard: null, gamePhase: 'revealing' })
   },
   
   selectRow: (rowIndex) => {
     const { game, rowSelection } = get()
     if (!game || !rowSelection) return
     
-    // Apply the row selection
-    const updatedGame = selectCardForPlayer(
-      game, 
-      rowSelection.playerIndex, 
-      rowSelection.card, 
-      rowIndex
-    )
+    // Apply the row selection for the already-selected card
+    const updatedGame = setChosenRowForPlayer(game, rowSelection.playerIndex, rowIndex)
     
-    // Have bots make their selections
-    const bots = game.players.slice(1).map(p => createSmartBot(p.name))
-    
-    let finalGame = updatedGame
-    for (let i = 1; i < game.players.length; i++) {
-      const bot = bots[i - 1]
-      const player = finalGame.players[i]
-      const decision = selectCardForSmartBot(bot, player, finalGame.board)
-      
-      finalGame = selectCardForPlayer(
-        finalGame,
-        i,
-        decision.card,
-        decision.chosenRow
-      )
-    }
-    
+    // Bots have already selected during submitTurn; proceed to revealing
     set({ 
-      game: finalGame,
+      game: updatedGame,
       rowSelection: null,
       selectedCard: null,
       gamePhase: 'revealing'
@@ -149,40 +139,56 @@ export const useGameStore = create<GameStore>((set, get) => ({
   resolveCurrentRound: () => {
     const { game } = get()
     if (!game || !getAllPlayersReady(game)) return
-    
-    // Generate log entries before resolution
+    // Simulate resolution step-by-step to determine if any row choice is needed now
+    let workGame = game
+    let tempBoard = game.board
     const newLogEntries: LogEntry[] = []
-    
-    // Sort selections by card value for proper order
-    const sortedSelections = [...game.playerSelections]
-      .sort((a, b) => a.card.number - b.card.number)
-    
-    sortedSelections.forEach(selection => {
-      const player = game.players[selection.playerIndex]
-      const card = selection.card
-      const targetRow = getRowForCard(game.board, card)
-      
+    const selections = [...game.playerSelections].sort((a, b) => a.card.number - b.card.number)
+
+    for (const selection of selections) {
+      const { playerIndex, card } = selection
+      const player = workGame.players[playerIndex]
+      const targetRow = getRowForCard(tempBoard, card)
+
       if (targetRow === -1) {
-        // Too low card - player chose a row
-        const chosenRow = selection.chosenRow || 0
-        const takenCards = game.board[chosenRow]
+        // Needs a row choice; if not provided yet, handle based on human vs bot
+        const currentSelection = workGame.playerSelections.find(s => s.playerIndex === playerIndex)!
+        let chosenRow = currentSelection.chosenRow
+
+        if (chosenRow === undefined) {
+          if (playerIndex === 0) {
+            // Prompt human now and pause resolution
+            set({ rowSelection: { playerIndex, card }, gamePhase: 'selectingRow' })
+            return
+          } else {
+            // Bot: choose the row with minimum bull heads on the current board
+            let minHeads = Infinity
+            let bestRow = 0
+            for (let i = 0; i < tempBoard.length; i++) {
+              const heads = tempBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
+              if (heads < minHeads) { minHeads = heads; bestRow = i }
+            }
+            workGame = setChosenRowForPlayer(workGame, playerIndex, bestRow)
+            chosenRow = bestRow
+          }
+        }
+
+        // Apply takeRow to simulated board and log
+        const takenCards = tempBoard[chosenRow!]
         const bullHeads = takenCards.reduce((sum, c) => sum + c.bullHeads, 0)
-        
         newLogEntries.push({
           player: player.name,
           card: card.number,
           action: 'took-row',
-          row: chosenRow + 1,
+          row: (chosenRow as number) + 1,
           penaltyCards: takenCards.length,
           bullHeads
         })
+        tempBoard = takeRow(tempBoard, chosenRow!, card).board
       } else {
-        const row = game.board[targetRow]
-        
-        if (row.length === 5) {
-          // 6th card - takes the row
+        const row = tempBoard[targetRow]
+        if (row.length >= 5) {
           const bullHeads = row.reduce((sum, c) => sum + c.bullHeads, 0)
-          
           newLogEntries.push({
             player: player.name,
             card: card.number,
@@ -192,7 +198,6 @@ export const useGameStore = create<GameStore>((set, get) => ({
             bullHeads
           })
         } else {
-          // Normal placement
           newLogEntries.push({
             player: player.name,
             card: card.number,
@@ -200,10 +205,12 @@ export const useGameStore = create<GameStore>((set, get) => ({
             row: targetRow + 1
           })
         }
+        tempBoard = placeCard(tempBoard, targetRow, card).board
       }
-    })
-    
-    const resolved = resolveRound(game)
+    }
+
+    // If we complete the loop, we can fully resolve the round now
+    const resolved = resolveRound(workGame)
     
     // Check if game is over
     if (checkGameOver(resolved)) {

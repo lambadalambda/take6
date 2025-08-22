@@ -9,6 +9,7 @@ import {
   getPlayerByIndex,
   getAllPlayersReady,
   needsRowSelection,
+  setChosenRowForPlayer,
   type Game,
   type GameConfig
 } from '../game'
@@ -237,9 +238,10 @@ describe('Game functions', () => {
         i === 0 ? { ...p, hand: [lowCard], selectedCard: null } : p
       )}
       
-      // Alice needs to choose a row
-      initialized = selectCardForPlayer(initialized, 0, lowCard, 1)
-      expect(needsRowSelection(initialized, 0)).toBe(true)
+      // Alice selects a low card; row choice will be needed at resolution time. Provide it now.
+      initialized = selectCardForPlayer(initialized, 0, lowCard)
+      // Set the chosen row explicitly for this turn (deferred decision)
+      initialized = setChosenRowForPlayer(initialized, 0, 1)
       
       // Others play normal cards
       for (let i = 1; i < 4; i++) {

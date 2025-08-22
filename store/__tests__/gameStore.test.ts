@@ -131,6 +131,8 @@ describe('Game Store', () => {
     act(() => {
       result.current.selectCard(lowCard)
       result.current.submitTurn()
+      // Row selection is determined at resolution time
+      result.current.resolveCurrentRound()
     })
     
     expect(result.current.gamePhase).toBe('selectingRow')
@@ -144,9 +146,10 @@ describe('Game Store', () => {
     act(() => {
       result.current.initializeGame(['Alice', 'Bot1', 'Bot2', 'Bot3'])
       result.current.startNewRound()
-      
-      const lowCard = createCard(5)
-      
+    })
+
+    // Prepare too-low scenario
+    act(() => {
       useGameStore.setState(state => ({
         game: state.game ? {
           ...state.game,
@@ -156,19 +159,31 @@ describe('Game Store', () => {
             [createCard(92)],
             [createCard(93)]
           ],
-          players: state.game.players.map((p, i) => 
-            i === 0 ? { ...p, hand: [lowCard, ...p.hand.slice(1)] } : p
-          )
-        } : null,
-        rowSelection: { playerIndex: 0, card: lowCard },
-        gamePhase: 'selectingRow'
+          players: state.game.players.map((p, i) => {
+            if (i === 0) return { ...p, hand: [createCard(5), ...p.hand.slice(1)] }
+            // Force bots to have high safe cards so human 5 resolves first
+            const forced = 100 + i // 101,102,103 for bots 1..3
+            return { ...p, hand: [createCard(forced)] }
+          })
+        } : null
       }))
     })
-    
+
+    // Human selects low card and submits
+    const lowCard2 = createCard(5)
+    act(() => {
+      result.current.selectCard(lowCard2)
+      result.current.submitTurn()
+      result.current.resolveCurrentRound() // triggers selectingRow
+    })
+
+    expect(result.current.gamePhase).toBe('selectingRow')
+
+    // Now choose the row
     act(() => {
       result.current.selectRow(2)
     })
-    
+
     expect(result.current.rowSelection).toBeNull()
     expect(result.current.gamePhase).toBe('revealing')
   })

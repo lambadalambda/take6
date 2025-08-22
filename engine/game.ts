@@ -11,8 +11,7 @@ import {
   type Board,
   type CardPlacement,
   createBoard,
-  processCardPlacements,
-  getRowForCard
+  processCardPlacements
 } from './board'
 import { createDeck, shuffleDeck, dealCards } from './deck'
 
@@ -91,20 +90,15 @@ export const selectCardForPlayer = (game: Game, playerIndex: number, card: Card,
   if (!player) {
     throw new Error('Invalid player index')
   }
-  
-  // Check if this card would be too low for any row
-  const targetRow = getRowForCard(game.board, card)
-  const needsRowChoice = targetRow === -1
-  
-  // If card is too low and no row was chosen, store the selection pending row choice
-  // If card is normal or row was chosen, update player
+
   const updatedPlayer = selectCard(player, card)
   
   // Store the selection with optional row choice
   const newSelection: PlayerSelection = {
     playerIndex,
     card,
-    chosenRow: needsRowChoice ? chosenRow : undefined
+    // We no longer try to predict if a row choice is needed here; if provided, we store it
+    chosenRow
   }
   
   // Remove any existing selection for this player and add new one
@@ -125,8 +119,9 @@ export const selectCardForPlayer = (game: Game, playerIndex: number, card: Card,
 export const needsRowSelection = (game: Game, playerIndex: number): boolean => {
   const player = game.players[playerIndex]
   if (!player || !player.selectedCard) return false
-  
-  return getRowForCard(game.board, player.selectedCard) === -1
+  // This check is ambiguous before resolution since earlier cards can change the board.
+  // We conservatively return false here to avoid blocking readiness prematurely.
+  return false
 }
 
 export const getAllPlayersReady = (game: Game): boolean => {
@@ -138,19 +133,7 @@ export const getAllPlayersReady = (game: Game): boolean => {
   const allHaveSelections = game.players.every((player, index) => 
     game.playerSelections.some(s => s.playerIndex === index)
   )
-  if (!allHaveSelections) return false
-  
-  // All players with too-low cards must have chosen a row
-  return game.players.every((player, index) => {
-    if (!player.selectedCard) return false
-    
-    if (needsRowSelection(game, index)) {
-      const selection = game.playerSelections.find(s => s.playerIndex === index)
-      return selection?.chosenRow !== undefined
-    }
-    
-    return true
-  })
+  return allHaveSelections
 }
 
 export const resolveRound = (game: Game): Game => {
@@ -216,4 +199,34 @@ export const getWinner = (game: Game): Player | null => {
 
 export const getPlayerByIndex = (game: Game, index: number): Player | undefined => {
   return game.players[index]
+}
+
+// Allow setting or updating a chosen row for a player's current selection.
+export const setChosenRowForPlayer = (game: Game, playerIndex: number, chosenRow: number): Game => {
+  if (playerIndex < 0 || playerIndex >= game.players.length) {
+    throw new Error('Invalid player index')
+  }
+  if (!Number.isInteger(chosenRow) || chosenRow < 0 || chosenRow >= game.board.length) {
+    throw new Error('Invalid row index')
+  }
+  const player = game.players[playerIndex]
+  if (!player.selectedCard) {
+    throw new Error('Player has not selected a card')
+  }
+
+  const selectionIndex = game.playerSelections.findIndex(s => s.playerIndex === playerIndex)
+  if (selectionIndex === -1) {
+    throw new Error('No selection found for player')
+  }
+
+  const updatedSelections = [...game.playerSelections]
+  updatedSelections[selectionIndex] = {
+    ...updatedSelections[selectionIndex],
+    chosenRow
+  }
+
+  return {
+    ...game,
+    playerSelections: updatedSelections
+  }
 }
