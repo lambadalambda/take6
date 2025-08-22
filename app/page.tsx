@@ -14,7 +14,6 @@ export default function GamePage() {
     game,
     selectedCard,
     gamePhase,
-    rowSelection,
     logEntries,
     resolutionBoard,
     resolutionIndex,
@@ -22,7 +21,6 @@ export default function GamePage() {
     startNewRound,
     selectCard,
     submitTurn,
-    selectRow,
     resolveCurrentRound,
     startResolution,
     processNextCard,
@@ -31,7 +29,6 @@ export default function GamePage() {
     resetGame
   } = useGameStore()
 
-  const [showRowSelection, setShowRowSelection] = useState(false)
   
   // Generate lava blob properties with better distribution
   const [lavaBlobs] = useState(() => {
@@ -79,12 +76,6 @@ export default function GamePage() {
 
   // Handle game phase changes
   useEffect(() => {
-    if (gamePhase === 'selectingRow' || gamePhase === 'waitingForRow') {
-      setShowRowSelection(true)
-    } else {
-      setShowRowSelection(false)
-    }
-
     if (gamePhase === 'resolving') {
       // Old flow - immediately resolve
       resolveCurrentRound()
@@ -103,12 +94,6 @@ export default function GamePage() {
     }
   }
 
-  const handleRowSelect = (rowIndex: number) => {
-    if (gamePhase === 'selectingRow') {
-      selectRow(rowIndex)
-      setShowRowSelection(false)
-    }
-  }
 
   const handleNewGame = () => {
     resetGame()
@@ -248,8 +233,6 @@ export default function GamePage() {
           <span className="text-sm">Round {currentRoundNumber}</span>
           <span className="text-xs px-2 py-1 bg-white/20 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.3)]">
             {gamePhase === 'selecting' && 'Select a card'}
-            {gamePhase === 'selectingRow' && 'Select a row to take'}
-            {gamePhase === 'waitingForRow' && 'Select a row to take'}
             {gamePhase === 'revealing' && 'Revealing cards...'}
             {gamePhase === 'resolvingStep' && 'Placing cards...'}
             {gamePhase === 'resolving' && 'Resolving...'}
@@ -307,29 +290,6 @@ export default function GamePage() {
           </div>
         )}
 
-        {/* Row Selection Modal */}
-        {showRowSelection && rowSelection && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-md">
-              <h2 className="text-xl font-bold mb-4">
-                Card {rowSelection.card.number} is too low!
-              </h2>
-              <p className="mb-4">Choose a row to take all its cards:</p>
-              <div className="space-y-2">
-                {(resolutionBoard || game.board).map((row, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleRowSelect(index)}
-                    className="w-full p-3 text-left bg-gray-100 hover:bg-gray-200 rounded transition-colors"
-                  >
-                    Row {index + 1}: {row.map(c => c.number).join(', ')} 
-                    ({row.reduce((sum, c) => sum + c.bullHeads, 0)} bull heads)
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 
       {/* Player Hand Area - Bottom - Fixed height */}
       <div className="h-48 px-6 pb-2 relative z-10">

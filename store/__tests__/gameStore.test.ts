@@ -135,8 +135,8 @@ describe('Game Store', () => {
       result.current.resolveCurrentRound()
     })
     
-    expect(result.current.gamePhase).toBe('selectingRow')
-    expect(result.current.rowSelection).toEqual({ playerIndex: 0, card: lowCard })
+    // Should auto-select row and continue
+    expect(result.current.gamePhase).toBe('selecting')
   })
 
   it('should handle row selection for too-low card', () => {
@@ -174,18 +174,12 @@ describe('Game Store', () => {
     act(() => {
       result.current.selectCard(lowCard2)
       result.current.submitTurn()
-      result.current.resolveCurrentRound() // triggers selectingRow
+      result.current.resolveCurrentRound() // auto-selects row
     })
 
-    expect(result.current.gamePhase).toBe('selectingRow')
-
-    // Now choose the row
-    act(() => {
-      result.current.selectRow(2)
-    })
-
+    // Should auto-select row and continue
+    expect(result.current.gamePhase).toBe('selecting')
     expect(result.current.rowSelection).toBeNull()
-    expect(result.current.gamePhase).toBe('revealing')
   })
 
   it('should resolve round after all players ready', () => {
@@ -542,15 +536,7 @@ describe('Game Store', () => {
         result.current.processNextCard() // Try to process card 5
       })
       
-      expect(result.current.gamePhase).toBe('waitingForRow')
-      expect(result.current.rowSelection?.card.number).toBe(5)
-      expect(result.current.resolutionBoard).toEqual(result.current.game?.board) // Board unchanged
-      
-      // Select row 0
-      act(() => {
-        result.current.selectRow(0)
-      })
-      
+      // Should automatically select row 0 (minimum bull heads)
       expect(result.current.gamePhase).toBe('resolvingStep')
       expect(result.current.resolutionBoard?.[0]).toHaveLength(1)
       expect(result.current.resolutionBoard?.[0][0].number).toBe(5)

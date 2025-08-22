@@ -16,7 +16,7 @@ import { type Card } from '../engine/card'
 import { createSmartBot, selectCardForSmartBot } from '../ai/smartBot'
 import { type LogEntry } from '../components/GameLog'
 
-export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'revealing' | 'resolvingStep' | 'waitingForRow' | 'resolving' | 'gameOver'
+export type GamePhase = 'waiting' | 'selecting' | 'revealing' | 'resolvingStep' | 'resolving' | 'gameOver'
 
 export type RowSelectionState = {
   playerIndex: number
@@ -126,48 +126,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set({ game: updatedGame, selectedCard: null, gamePhase: 'revealing' })
   },
   
-  selectRow: (rowIndex) => {
-    const { game, rowSelection, gamePhase, resolutionBoard, resolutionIndex, resolutionResults } = get()
-    if (!game || !rowSelection) return
-    
-    if (gamePhase === 'waitingForRow') {
-      // During step-by-step resolution
-      const sortedSelections = [...game.playerSelections].sort((a, b) => a.card.number - b.card.number)
-      const currentSelection = sortedSelections[resolutionIndex]
-      
-      // Apply the row selection directly to the resolution board
-      const result = processCardPlacementStep(resolutionBoard!, {
-        card: currentSelection.card,
-        playerIndex: currentSelection.playerIndex,
-        chosenRow: rowIndex
-      })
-      
-      // Update resolution state and continue
-      set({ 
-        resolutionBoard: result.board,
-        resolutionResults: [...(resolutionResults || []), {
-          card: currentSelection.card,
-          playerIndex: currentSelection.playerIndex,
-          rowIndex: result.rowIndex,
-          takenCards: result.takenCards
-        }],
-        resolutionIndex: resolutionIndex + 1,
-        rowSelection: null,
-        gamePhase: 'resolvingStep'
-      })
-      
-      // Process next card after a delay
-      setTimeout(() => get().processNextCard(), 1000)
-    } else {
-      // Old flow for backward compatibility (will be removed)
-      const updatedGame = setChosenRowForPlayer(game, rowSelection.playerIndex, rowIndex)
-      set({ 
-        game: updatedGame,
-        rowSelection: null,
-        selectedCard: null,
-        gamePhase: 'revealing'
-      })
-    }
+  selectRow: () => {
+    // This function is no longer used since we auto-select rows
+    // Keeping it as a no-op for backward compatibility
+    return
   },
   
   resolveCurrentRound: () => {
@@ -190,21 +152,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
         let chosenRow = currentSelection.chosenRow
 
         if (chosenRow === undefined) {
-          if (playerIndex === 0) {
-            // Prompt human now and pause resolution
-            set({ rowSelection: { playerIndex, card }, gamePhase: 'selectingRow' })
-            return
-          } else {
-            // Bot: choose the row with minimum bull heads on the current board
-            let minHeads = Infinity
-            let bestRow = 0
-            for (let i = 0; i < tempBoard.length; i++) {
-              const heads = tempBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
-              if (heads < minHeads) { minHeads = heads; bestRow = i }
-            }
-            workGame = setChosenRowForPlayer(workGame, playerIndex, bestRow)
-            chosenRow = bestRow
+          // Auto-select row with minimum bull heads for all players
+          let minHeads = Infinity
+          let bestRow = 0
+          for (let i = 0; i < tempBoard.length; i++) {
+            const heads = tempBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
+            if (heads < minHeads) { minHeads = heads; bestRow = i }
           }
+          workGame = setChosenRowForPlayer(workGame, playerIndex, bestRow)
+          chosenRow = bestRow
         }
 
         // Apply takeRow to simulated board and log
@@ -403,49 +359,37 @@ export const useGameStore = create<GameStore>((set, get) => ({
     })
     
     if (result.needsRowSelection) {
-      // Need row selection
-      if (currentSelection.playerIndex === 0) {
-        // Human player - pause for selection
-        set({
-          gamePhase: 'waitingForRow',
-          rowSelection: { 
-            playerIndex: currentSelection.playerIndex, 
-            card: currentSelection.card 
-          }
-        })
-      } else {
-        // Bot - auto-select row with minimum bull heads
-        let minHeads = Infinity
-        let bestRow = 0
-        for (let i = 0; i < resolutionBoard.length; i++) {
-          const heads = resolutionBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
-          if (heads < minHeads) {
-            minHeads = heads
-            bestRow = i
-          }
+      // Auto-select row with minimum bull heads for all players
+      let minHeads = Infinity
+      let bestRow = 0
+      for (let i = 0; i < resolutionBoard.length; i++) {
+        const heads = resolutionBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
+        if (heads < minHeads) {
+          minHeads = heads
+          bestRow = i
         }
-        
-        // Apply bot's choice and continue
-        const botResult = processCardPlacementStep(resolutionBoard, {
+      }
+      
+      // Apply the choice and continue
+      const autoResult = processCardPlacementStep(resolutionBoard, {
+        card: currentSelection.card,
+        playerIndex: currentSelection.playerIndex,
+        chosenRow: bestRow
+      })
+      
+      set({
+        resolutionBoard: autoResult.board,
+        resolutionResults: [...resolutionResults, {
           card: currentSelection.card,
           playerIndex: currentSelection.playerIndex,
-          chosenRow: bestRow
-        })
-        
-        set({
-          resolutionBoard: botResult.board,
-          resolutionResults: [...resolutionResults, {
-            card: currentSelection.card,
-            playerIndex: currentSelection.playerIndex,
-            rowIndex: botResult.rowIndex,
-            takenCards: botResult.takenCards
-          }],
-          resolutionIndex: resolutionIndex + 1
-        })
-        
-        // Continue to next card after a delay
-        setTimeout(() => get().processNextCard(), 1000)
-      }
+          rowIndex: autoResult.rowIndex,
+          takenCards: autoResult.takenCards
+        }],
+        resolutionIndex: resolutionIndex + 1
+      })
+      
+      // Continue to next card after a delay
+      setTimeout(() => get().processNextCard(), 1000)
     } else {
       // Normal placement or 6th card - update and continue
       set({
