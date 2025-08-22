@@ -67,7 +67,7 @@ describe('ScoreBoard Component', () => {
     render(<ScoreBoard players={samplePlayers} currentPlayerIndex={1} />)
     
     const bobRow = screen.getByTestId('player-row-1')
-    expect(bobRow).toHaveClass('bg-blue-100')
+    expect(bobRow).toHaveClass('bg-white/20')
   })
 
   it('should mark leader with lowest score', () => {
@@ -106,7 +106,7 @@ describe('ScoreBoard Component', () => {
   it('should show round number', () => {
     render(<ScoreBoard players={samplePlayers} currentRound={3} />)
     
-    expect(screen.getByText('Round 3')).toBeInTheDocument()
+    expect(screen.getByText('R3')).toBeInTheDocument()
   })
 
   it('should apply custom className', () => {

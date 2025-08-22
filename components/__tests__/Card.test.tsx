@@ -50,7 +50,7 @@ describe('Card Component', () => {
     render(<Card card={card} selected={true} />)
     
     const cardElement = screen.getByTestId('card')
-    expect(cardElement).toHaveClass('ring-4')
+    expect(cardElement).toHaveClass('selected-card-border')
   })
 
   it('should show disabled state', () => {

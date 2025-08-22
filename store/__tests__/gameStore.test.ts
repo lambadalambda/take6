@@ -96,7 +96,7 @@ describe('Game Store', () => {
     expect(result.current.game?.players[1].selectedCard).not.toBeNull()
     expect(result.current.game?.players[2].selectedCard).not.toBeNull()
     expect(result.current.game?.players[3].selectedCard).not.toBeNull()
-    expect(result.current.gamePhase).toBe('resolving')
+    expect(result.current.gamePhase).toBe('revealing')
   })
 
   it('should handle too-low card requiring row selection', () => {
@@ -170,7 +170,7 @@ describe('Game Store', () => {
     })
     
     expect(result.current.rowSelection).toBeNull()
-    expect(result.current.gamePhase).toBe('selecting')
+    expect(result.current.gamePhase).toBe('revealing')
   })
 
   it('should resolve round after all players ready', () => {

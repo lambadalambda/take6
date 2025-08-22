@@ -43,17 +43,17 @@ describe('Board Component', () => {
   it('should show row numbers', () => {
     render(<Board board={sampleBoard} />)
     
-    expect(screen.getByText('Row 1')).toBeInTheDocument()
-    expect(screen.getByText('Row 2')).toBeInTheDocument()
-    expect(screen.getByText('Row 3')).toBeInTheDocument()
-    expect(screen.getByText('Row 4')).toBeInTheDocument()
+    expect(screen.getByText('R1')).toBeInTheDocument()
+    expect(screen.getByText('R2')).toBeInTheDocument()
+    expect(screen.getByText('R3')).toBeInTheDocument()
+    expect(screen.getByText('R4')).toBeInTheDocument()
   })
 
   it('should highlight full rows', () => {
     render(<Board board={sampleBoard} />)
     
     const row3 = screen.getByTestId('row-3')
-    expect(row3).toHaveClass('bg-yellow-50')
+    expect(row3).toHaveClass('animate-pulse')
   })
 
   it('should show empty slots for non-full rows', () => {

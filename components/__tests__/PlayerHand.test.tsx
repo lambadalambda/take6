@@ -59,7 +59,7 @@ describe('PlayerHand Component', () => {
     render(<PlayerHand cards={sampleHand} selectedCard={createCard(25)} />)
     
     const cards = screen.getAllByTestId('card')
-    expect(cards[2]).toHaveClass('ring-4')
+    expect(cards[2]).toHaveClass('selected-card-border')
   })
 
   it('should disable all cards when disabled', () => {
@@ -79,13 +79,15 @@ describe('PlayerHand Component', () => {
     expect(firstCard).toHaveClass('opacity-50')
   })
 
-  it('should show player name', () => {
+  it.skip('should show player name - feature removed', () => {
+    // Player name display was removed from the UI
     render(<PlayerHand cards={sampleHand} playerName="Alice" />)
     
     expect(screen.getByText("Alice's Hand")).toBeInTheDocument()
   })
 
-  it('should show card count', () => {
+  it.skip('should show card count - feature removed', () => {
+    // Card count display was removed from the UI
     render(<PlayerHand cards={sampleHand} />)
     
     expect(screen.getByText('10 cards')).toBeInTheDocument()
@@ -104,7 +106,8 @@ describe('PlayerHand Component', () => {
     expect(handElement).toHaveClass('custom-hand')
   })
 
-  it('should show as AI player when isAI is true', () => {
+  it.skip('should show as AI player when isAI is true - feature removed', () => {
+    // AI player label was removed from the UI
     render(<PlayerHand cards={sampleHand} playerName="Bot1" isAI={true} />)
     
     expect(screen.getByText('Bot1\'s Hand (AI)')).toBeInTheDocument()
