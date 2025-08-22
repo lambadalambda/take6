@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { type Board as BoardType } from '../engine/board'
 import { getRowForCard } from '../engine/board'
 import { type PlayerSelection } from '../engine/game'
@@ -75,6 +75,72 @@ export const Board: React.FC<BoardProps> = ({
   animatingSelections = []
 }) => {
   const MAX_CARDS_PER_ROW = 5
+  const [newCards, setNewCards] = useState<Map<number, number>>(new Map())
+  const [previousBoard, setPreviousBoard] = useState<BoardType | null>(null)
+  const placementCounter = useRef(0)
+  const clearTimerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (!previousBoard) {
+      setPreviousBoard(board)
+      return
+    }
+
+    // Find cards that are new (not present anywhere in the previous board)
+    const newCardMap = new Map<number, number>()
+    
+    // First, collect all card numbers from the previous board
+    const previousCardNumbers = new Set<number>()
+    previousBoard.forEach(row => {
+      row.forEach(card => {
+        previousCardNumbers.add(card.number)
+      })
+    })
+    
+    // Now find cards in current board that weren't in previous board at all
+    board.forEach(row => {
+      row.forEach(card => {
+        if (!previousCardNumbers.has(card.number)) {
+          placementCounter.current += 1
+          newCardMap.set(card.number, placementCounter.current)
+        }
+      })
+    })
+
+    if (newCardMap.size > 0) {
+      // Clear any existing timer
+      if (clearTimerRef.current) {
+        clearTimeout(clearTimerRef.current)
+      }
+
+      setNewCards(prev => {
+        // Merge with existing new cards to avoid overwriting
+        const merged = new Map(prev)
+        newCardMap.forEach((value, key) => {
+          merged.set(key, value)
+        })
+        return merged
+      })
+      setPreviousBoard(board)
+
+      // Set new timer to clear all new cards after animation
+      clearTimerRef.current = setTimeout(() => {
+        setNewCards(new Map())
+        clearTimerRef.current = null
+      }, 1500) // Slightly longer to ensure animation completes
+    } else {
+      setPreviousBoard(board)
+    }
+  }, [board])
+
+  // Clean up timer on unmount
+  useEffect(() => {
+    return () => {
+      if (clearTimerRef.current) {
+        clearTimeout(clearTimerRef.current)
+      }
+    }
+  }, [])
 
   const calculateRowBullHeads = (row: BoardType[number]): number => {
     return row.reduce((sum, card) => sum + card.bullHeads, 0)
@@ -111,15 +177,21 @@ export const Board: React.FC<BoardProps> = ({
             
             <div className="flex gap-2 board-row-container rounded-xl bg-white/5 backdrop-blur-md p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]">
               {/* Render existing cards */}
-              {row.map((card, cardIndex) => (
-                <div 
-                  key={`card-${card.number}`} 
-                  className="board-card-growing board-card-animate relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"
-                  style={{ animationDelay: `${cardIndex * 0.15 + rowIndex * 0.1}s` }}
-                >
-                  <Card card={card} size="small" />
-                </div>
-              ))}
+              {row.map((card, cardIndex) => {
+                const placementId = newCards.get(card.number)
+                const isNew = placementId !== undefined
+                // Use a key that includes placement ID to force new element for animations
+                const key = isNew ? `card-${card.number}-placed-${placementId}` : `card-${card.number}`
+                return (
+                  <div 
+                    key={key} 
+                    className={`${isNew ? 'board-card-growing' : 'board-card-animate'} relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]`}
+                    style={{ animationDelay: isNew ? '0s' : `${cardIndex * 0.15 + rowIndex * 0.1}s` }}
+                  >
+                    <Card card={card} size="small" />
+                  </div>
+                )
+              })}
               
               {/* Render empty slots */}
               {Array.from({ 
