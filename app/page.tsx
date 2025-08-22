@@ -126,8 +126,8 @@ export default function GamePage() {
     )
   }
 
-  // Check for round complete
-  if (humanPlayer.hand.length === 0) {
+  // Check for round complete - but not if we're still resolving cards
+  if (humanPlayer.hand.length === 0 && gamePhase !== 'revealing' && gamePhase !== 'resolvingStep') {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-8">
         <div className="text-center space-y-6">
