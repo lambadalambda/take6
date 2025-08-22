@@ -116,13 +116,6 @@ export const selectCardForPlayer = (game: Game, playerIndex: number, card: Card,
   }
 }
 
-export const needsRowSelection = (game: Game, playerIndex: number): boolean => {
-  const player = game.players[playerIndex]
-  if (!player || !player.selectedCard) return false
-  // This check is ambiguous before resolution since earlier cards can change the board.
-  // We conservatively return false here to avoid blocking readiness prematurely.
-  return false
-}
 
 export const getAllPlayersReady = (game: Game): boolean => {
   // All players must have selected a card

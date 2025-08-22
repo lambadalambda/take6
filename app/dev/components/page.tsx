@@ -68,7 +68,7 @@ export default function ComponentsDevPage() {
                 <Card
                   key={card.number}
                   card={card}
-                  onClick={() => console.log('Clicked disabled card')}
+                  onClick={() => {}}
                   disabled={true}
                 />
               ))}
