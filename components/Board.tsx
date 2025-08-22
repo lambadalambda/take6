@@ -79,31 +79,6 @@ export const Board: React.FC<BoardProps> = ({
   const calculateRowBullHeads = (row: BoardType[number]): number => {
     return row.reduce((sum, card) => sum + card.bullHeads, 0)
   }
-  
-  // Get all cards that should be shown as animating in this row
-  const getAnimatingCardsForRow = (rowIndex: number) => {
-    if (animatingCardIndex < 0 || !animatingSelections.length) return []
-    
-    // Sort selections by card number to match overlay order
-    const sortedSelections = [...animatingSelections].sort((a, b) => a.card.number - b.card.number)
-    
-    // Get all cards up to and including the current animating index that belong to this row
-    const cardsForRow = []
-    for (let i = 0; i <= animatingCardIndex && i < sortedSelections.length; i++) {
-      const selection = sortedSelections[i]
-      const targetRow = getRowForCard(board, selection.card)
-      const actualRow = targetRow === -1 ? (selection.chosenRow || 0) : targetRow
-      
-      if (actualRow === rowIndex) {
-        cardsForRow.push({
-          card: selection.card,
-          isCurrentlyAnimating: i === animatingCardIndex
-        })
-      }
-    }
-    
-    return cardsForRow
-  }
 
   return (
     <>
@@ -138,27 +113,17 @@ export const Board: React.FC<BoardProps> = ({
               {/* Render existing cards */}
               {row.map((card, cardIndex) => (
                 <div 
-                  key={`${rowIndex}-${cardIndex}`} 
-                  className="board-card-animate relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"
+                  key={`card-${card.number}`} 
+                  className="board-card-growing board-card-animate relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"
                   style={{ animationDelay: `${cardIndex * 0.15 + rowIndex * 0.1}s` }}
                 >
                   <Card card={card} size="small" />
                 </div>
               ))}
               
-              {/* Render animating cards for this row */}
-              {getAnimatingCardsForRow(rowIndex).map((animatingCard, index) => (
-                <div 
-                  key={`animating-${rowIndex}-${index}`} 
-                  className={animatingCard.isCurrentlyAnimating ? "board-card-growing relative drop-shadow-[0_0_14px_rgba(236,72,153,0.35)]" : "board-card-animate relative drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"}
-                >
-                  <Card card={animatingCard.card} size="small" />
-                </div>
-              ))}
-              
               {/* Render empty slots */}
               {Array.from({ 
-                length: MAX_CARDS_PER_ROW - row.length - getAnimatingCardsForRow(rowIndex).length 
+                length: MAX_CARDS_PER_ROW - row.length 
               }).map((_, i) => (
                 <div
                   key={`empty-${i}`}

@@ -43,9 +43,7 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
   onComplete,
   onCardAnimating
 }) => {
-  const [phase, setPhase] = useState<'fadingIn' | 'showing' | 'animating' | 'fadingOut' | 'done'>('fadingIn')
-  const [currentCardIndex, setCurrentCardIndex] = useState(-1)
-  const [animatingCards, setAnimatingCards] = useState<Set<number>>(new Set())
+  const [phase, setPhase] = useState<'fadingIn' | 'showing' | 'fadingOut' | 'done'>('fadingIn')
   
   // Sort selections by card number
   const sortedSelections = [...selections].sort((a, b) => a.card.number - b.card.number)
@@ -56,49 +54,23 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
       setPhase('showing')
     }, 100)
     
-    // Start card animations after showing for 2 seconds
+    // Just show cards for 2 seconds, then fade out
     const showTimer = setTimeout(() => {
-      setPhase('animating')
-      setCurrentCardIndex(0)
+      setPhase('fadingOut')
     }, 2100)
+    
+    // Complete after fade out
+    const completeTimer = setTimeout(() => {
+      setPhase('done')
+      onComplete()
+    }, 2400)
     
     return () => {
       clearTimeout(fadeInTimer)
       clearTimeout(showTimer)
+      clearTimeout(completeTimer)
     }
-  }, [])
-  
-  useEffect(() => {
-    if (phase === 'animating' && currentCardIndex >= 0) {
-      // Add current card to animating set
-      setAnimatingCards(prev => new Set(prev).add(currentCardIndex))
-      
-      // Notify parent about which card is animating (for board to show grow animation)
-      if (onCardAnimating) {
-        onCardAnimating(currentCardIndex)
-      }
-      
-      if (currentCardIndex < sortedSelections.length - 1) {
-        // Move to next card after 1 second
-        const timer = setTimeout(() => {
-          setCurrentCardIndex(currentCardIndex + 1)
-        }, 1000)
-        return () => clearTimeout(timer)
-      } else {
-        // All cards animated, start fade out after last animation
-        const timer = setTimeout(() => {
-          setPhase('fadingOut')
-          
-          // Complete after fade out
-          setTimeout(() => {
-            setPhase('done')
-            onComplete()
-          }, 300)
-        }, 1000)
-        return () => clearTimeout(timer)
-      }
-    }
-  }, [phase, currentCardIndex, sortedSelections.length, onComplete, onCardAnimating])
+  }, [onComplete])
   
   if (phase === 'done') return null
   
@@ -114,24 +86,20 @@ export const CardRevealOverlay: React.FC<CardRevealOverlayProps> = ({
         style={{ perspective: '1000px' }}
       >
         <div className="flex gap-6">
-          {sortedSelections.map((selection, index) => {
-            const shouldShow = !animatingCards.has(index)
-            
-            return shouldShow ? (
-              <div 
-                key={index} 
-                className="flex flex-col items-center gap-2 overlay-card-sway"
-                style={{
-                  animationDelay: `${index * 0.2}s`
-                }}
-              >
-                <Card card={selection.card} />
-                <div className="bg-white px-3 py-1 rounded-full text-sm font-bold">
-                  {playerNames[selection.playerIndex]}
-                </div>
+          {sortedSelections.map((selection, index) => (
+            <div 
+              key={index} 
+              className="flex flex-col items-center gap-2 overlay-card-sway"
+              style={{
+                animationDelay: `${index * 0.2}s`
+              }}
+            >
+              <Card card={selection.card} />
+              <div className="bg-white px-3 py-1 rounded-full text-sm font-bold">
+                {playerNames[selection.playerIndex]}
               </div>
-            ) : null
-          })}
+            </div>
+          ))}
         </div>
       </div>
     </>

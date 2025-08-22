@@ -22,6 +22,13 @@ export type ProcessedPlacement = {
   newBoard: Board
 }
 
+export type StepResult = {
+  board: Board
+  takenCards: Card[]
+  rowIndex: number
+  needsRowSelection: boolean
+}
+
 const MAX_CARDS_PER_ROW = 5
 
 export const createBoard = (startingCards: Card[]): Board => {
@@ -139,4 +146,46 @@ export const processCardPlacements = (board: Board, placements: CardPlacement[])
   }
   
   return results
+}
+
+// Step-by-step card placement function
+export const processCardPlacementStep = (
+  board: Board,
+  placement: CardPlacement
+): StepResult => {
+  const { card, chosenRow } = placement
+  
+  // Find the appropriate row for this card
+  const targetRow = getRowForCard(board, card)
+  
+  if (targetRow === -1) {
+    // Card is too low for any row
+    if (chosenRow === undefined) {
+      // Need to ask for row selection
+      return {
+        board: board,
+        takenCards: [],
+        rowIndex: -1,
+        needsRowSelection: true
+      }
+    }
+    
+    // Apply the chosen row
+    const result = takeRow(board, chosenRow, card)
+    return {
+      board: result.board,
+      takenCards: result.takenCards,
+      rowIndex: chosenRow,
+      needsRowSelection: false
+    }
+  }
+  
+  // Normal placement or 6th card rule
+  const result = placeCard(board, targetRow, card)
+  return {
+    board: result.board,
+    takenCards: result.takenCards,
+    rowIndex: targetRow,
+    needsRowSelection: false
+  }
 }

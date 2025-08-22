@@ -10,16 +10,24 @@ import {
   setChosenRowForPlayer,
   type Game 
 } from '../engine/game'
-import { getRowForCard, placeCard, takeRow } from '../engine/board'
+import { addPenaltyCards } from '../engine/player'
+import { getRowForCard, placeCard, takeRow, processCardPlacementStep, type Board } from '../engine/board'
 import { type Card } from '../engine/card'
 import { createSmartBot, selectCardForSmartBot } from '../ai/smartBot'
 import { type LogEntry } from '../components/GameLog'
 
-export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'revealing' | 'resolving' | 'gameOver'
+export type GamePhase = 'waiting' | 'selecting' | 'selectingRow' | 'revealing' | 'resolvingStep' | 'waitingForRow' | 'resolving' | 'gameOver'
 
 export type RowSelectionState = {
   playerIndex: number
   card: Card
+}
+
+export type ResolutionResult = {
+  card: Card
+  playerIndex: number
+  rowIndex: number
+  takenCards: Card[]
 }
 
 export type GameStore = {
@@ -30,6 +38,11 @@ export type GameStore = {
   rowSelection: RowSelectionState | null
   logEntries: LogEntry[]
   
+  // Resolution state
+  resolutionIndex: number
+  resolutionBoard: Board | null
+  resolutionResults: ResolutionResult[] | null
+  
   // Actions
   initializeGame: (playerNames: string[]) => void
   startNewRound: () => void
@@ -37,6 +50,11 @@ export type GameStore = {
   submitTurn: () => void
   selectRow: (rowIndex: number) => void
   resolveCurrentRound: () => void
+  
+  // New step-by-step resolution actions
+  startResolution: () => void
+  processNextCard: () => void
+  
   isGameOver: () => boolean
   getWinner: () => { name: string; index: number; score: number } | null
   resetGame: () => void
@@ -50,6 +68,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   rowSelection: null,
   logEntries: [],
   
+  // Resolution state
+  resolutionIndex: 0,
+  resolutionBoard: null,
+  resolutionResults: null,
+  
   // Actions
   initializeGame: (playerNames) => {
     const game = createGame({ playerNames })
@@ -61,7 +84,15 @@ export const useGameStore = create<GameStore>((set, get) => ({
     if (!game) return
     
     const newGame = initializeRound(game)
-    set({ game: newGame, selectedCard: null, gamePhase: 'selecting', logEntries: [] })
+    set({ 
+      game: newGame, 
+      selectedCard: null, 
+      gamePhase: 'selecting', 
+      logEntries: [],
+      resolutionIndex: 0,
+      resolutionBoard: null,
+      resolutionResults: null
+    })
   },
   
   selectCard: (card) => {
@@ -91,49 +122,52 @@ export const useGameStore = create<GameStore>((set, get) => ({
       )
     }
     
-    // Pre-check: if human will need to choose a row during resolution, prompt before showing animations
-    let tempBoard = updatedGame.board
-    const sortedSelections = [...updatedGame.playerSelections].sort((a, b) => a.card.number - b.card.number)
-    for (const s of sortedSelections) {
-      const target = getRowForCard(tempBoard, s.card)
-      if (target === -1) {
-        if (s.playerIndex === 0 && s.chosenRow === undefined) {
-          set({ game: updatedGame, selectedCard: null, rowSelection: { playerIndex: 0, card: s.card }, gamePhase: 'selectingRow' })
-          return
-        }
-        // Simulate taking a row
-        const rowIndex = s.chosenRow !== undefined ? s.chosenRow : (() => {
-          let min = Infinity, best = 0
-          for (let i = 0; i < tempBoard.length; i++) {
-            const heads = tempBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
-            if (heads < min) { min = heads; best = i }
-          }
-          return best
-        })()
-        tempBoard = takeRow(tempBoard, rowIndex, s.card).board
-      } else {
-        tempBoard = placeCard(tempBoard, target, s.card).board
-      }
-    }
-
-    // No immediate human row choice; proceed to revealing animations
+    // All selections made, proceed to revealing animations
     set({ game: updatedGame, selectedCard: null, gamePhase: 'revealing' })
   },
   
   selectRow: (rowIndex) => {
-    const { game, rowSelection } = get()
+    const { game, rowSelection, gamePhase, resolutionBoard, resolutionIndex, resolutionResults } = get()
     if (!game || !rowSelection) return
     
-    // Apply the row selection for the already-selected card
-    const updatedGame = setChosenRowForPlayer(game, rowSelection.playerIndex, rowIndex)
-    
-    // Bots have already selected during submitTurn; proceed to revealing
-    set({ 
-      game: updatedGame,
-      rowSelection: null,
-      selectedCard: null,
-      gamePhase: 'revealing'
-    })
+    if (gamePhase === 'waitingForRow') {
+      // During step-by-step resolution
+      const sortedSelections = [...game.playerSelections].sort((a, b) => a.card.number - b.card.number)
+      const currentSelection = sortedSelections[resolutionIndex]
+      
+      // Apply the row selection directly to the resolution board
+      const result = processCardPlacementStep(resolutionBoard!, {
+        card: currentSelection.card,
+        playerIndex: currentSelection.playerIndex,
+        chosenRow: rowIndex
+      })
+      
+      // Update resolution state and continue
+      set({ 
+        resolutionBoard: result.board,
+        resolutionResults: [...(resolutionResults || []), {
+          card: currentSelection.card,
+          playerIndex: currentSelection.playerIndex,
+          rowIndex: result.rowIndex,
+          takenCards: result.takenCards
+        }],
+        resolutionIndex: resolutionIndex + 1,
+        rowSelection: null,
+        gamePhase: 'resolvingStep'
+      })
+      
+      // Process next card after a delay
+      setTimeout(() => get().processNextCard(), 1000)
+    } else {
+      // Old flow for backward compatibility (will be removed)
+      const updatedGame = setChosenRowForPlayer(game, rowSelection.playerIndex, rowIndex)
+      set({ 
+        game: updatedGame,
+        rowSelection: null,
+        selectedCard: null,
+        gamePhase: 'revealing'
+      })
+    }
   },
   
   resolveCurrentRound: () => {
@@ -242,7 +276,191 @@ export const useGameStore = create<GameStore>((set, get) => ({
       selectedCard: null,
       gamePhase: 'waiting',
       rowSelection: null,
-      logEntries: []
+      logEntries: [],
+      resolutionIndex: 0,
+      resolutionBoard: null,
+      resolutionResults: null
     })
+  },
+  
+  // New step-by-step resolution functions
+  startResolution: () => {
+    const { game } = get()
+    if (!game || !getAllPlayersReady(game)) return
+    
+    // Initialize resolution state
+    set({
+      gamePhase: 'resolvingStep',
+      resolutionIndex: 0,
+      resolutionBoard: [...game.board.map(row => [...row])], // Deep copy
+      resolutionResults: []
+    })
+    
+    // Start processing cards after a short delay
+    setTimeout(() => get().processNextCard(), 1000)
+  },
+  
+  processNextCard: () => {
+    const { game, resolutionIndex, resolutionBoard, resolutionResults } = get()
+    if (!game || !resolutionBoard || !resolutionResults) return
+    
+    // Sort selections by card number
+    const sortedSelections = [...game.playerSelections].sort((a, b) => a.card.number - b.card.number)
+    
+    if (resolutionIndex >= sortedSelections.length) {
+      // All cards processed, complete resolution
+      const newLogEntries: LogEntry[] = []
+      
+      // Generate log entries from results
+      resolutionResults.forEach(result => {
+        const player = game.players[result.playerIndex]
+        if (result.takenCards.length > 0) {
+          const bullHeads = result.takenCards.reduce((sum, c) => sum + c.bullHeads, 0)
+          if (result.takenCards.length === 5) {
+            // 6th card
+            newLogEntries.push({
+              player: player.name,
+              card: result.card.number,
+              action: 'sixth-card',
+              row: result.rowIndex + 1,
+              penaltyCards: result.takenCards.length,
+              bullHeads
+            })
+          } else {
+            // Took row (too low)
+            newLogEntries.push({
+              player: player.name,
+              card: result.card.number,
+              action: 'took-row',
+              row: result.rowIndex + 1,
+              penaltyCards: result.takenCards.length,
+              bullHeads
+            })
+          }
+        } else {
+          // Normal placement
+          newLogEntries.push({
+            player: player.name,
+            card: result.card.number,
+            action: 'placed',
+            row: result.rowIndex + 1
+          })
+        }
+      })
+      
+      // Apply penalties to players and clear selections
+      const updatedPlayers = game.players.map(player => {
+        const playerResults = resolutionResults.filter(r => r.playerIndex === player.index)
+        const penaltyCards = playerResults.flatMap(r => r.takenCards)
+        
+        let updated = { ...player, selectedCard: null }
+        if (penaltyCards.length > 0) {
+          updated = addPenaltyCards(updated, penaltyCards)
+        }
+        return updated
+      })
+      
+      // Update game with final board and players
+      const updatedGame = {
+        ...game,
+        board: resolutionBoard,
+        players: updatedPlayers,
+        playerSelections: []
+      }
+      
+      // Check if game is over
+      if (checkGameOver(updatedGame)) {
+        set({ 
+          game: updatedGame, 
+          gamePhase: 'gameOver', 
+          logEntries: newLogEntries,
+          resolutionIndex: 0,
+          resolutionBoard: null,
+          resolutionResults: null
+        })
+      } else {
+        set({ 
+          game: updatedGame, 
+          gamePhase: 'selecting', 
+          logEntries: newLogEntries,
+          resolutionIndex: 0,
+          resolutionBoard: null,
+          resolutionResults: null
+        })
+      }
+      return
+    }
+    
+    // Process current card
+    const currentSelection = sortedSelections[resolutionIndex]
+    const player = game.players[currentSelection.playerIndex]
+    
+    // Process the placement
+    const result = processCardPlacementStep(resolutionBoard, {
+      card: currentSelection.card,
+      playerIndex: currentSelection.playerIndex,
+      chosenRow: currentSelection.chosenRow
+    })
+    
+    if (result.needsRowSelection) {
+      // Need row selection
+      if (currentSelection.playerIndex === 0) {
+        // Human player - pause for selection
+        set({
+          gamePhase: 'waitingForRow',
+          rowSelection: { 
+            playerIndex: currentSelection.playerIndex, 
+            card: currentSelection.card 
+          }
+        })
+      } else {
+        // Bot - auto-select row with minimum bull heads
+        let minHeads = Infinity
+        let bestRow = 0
+        for (let i = 0; i < resolutionBoard.length; i++) {
+          const heads = resolutionBoard[i].reduce((sum, c) => sum + c.bullHeads, 0)
+          if (heads < minHeads) {
+            minHeads = heads
+            bestRow = i
+          }
+        }
+        
+        // Apply bot's choice and continue
+        const botResult = processCardPlacementStep(resolutionBoard, {
+          card: currentSelection.card,
+          playerIndex: currentSelection.playerIndex,
+          chosenRow: bestRow
+        })
+        
+        set({
+          resolutionBoard: botResult.board,
+          resolutionResults: [...resolutionResults, {
+            card: currentSelection.card,
+            playerIndex: currentSelection.playerIndex,
+            rowIndex: botResult.rowIndex,
+            takenCards: botResult.takenCards
+          }],
+          resolutionIndex: resolutionIndex + 1
+        })
+        
+        // Continue to next card after a delay
+        setTimeout(() => get().processNextCard(), 1000)
+      }
+    } else {
+      // Normal placement or 6th card - update and continue
+      set({
+        resolutionBoard: result.board,
+        resolutionResults: [...resolutionResults, {
+          card: currentSelection.card,
+          playerIndex: currentSelection.playerIndex,
+          rowIndex: result.rowIndex,
+          takenCards: result.takenCards
+        }],
+        resolutionIndex: resolutionIndex + 1
+      })
+      
+      // Continue to next card after a delay
+      setTimeout(() => get().processNextCard(), 1000)
+    }
   }
 }))

@@ -16,19 +16,22 @@ export default function GamePage() {
     gamePhase,
     rowSelection,
     logEntries,
+    resolutionBoard,
+    resolutionIndex,
     initializeGame,
     startNewRound,
     selectCard,
     submitTurn,
     selectRow,
     resolveCurrentRound,
+    startResolution,
+    processNextCard,
     isGameOver,
     getWinner,
     resetGame
   } = useGameStore()
 
   const [showRowSelection, setShowRowSelection] = useState(false)
-  const [animatingCardIndex, setAnimatingCardIndex] = useState<number>(-1)
   
   // Generate lava blob properties with better distribution
   const [lavaBlobs] = useState(() => {
@@ -76,14 +79,14 @@ export default function GamePage() {
 
   // Handle game phase changes
   useEffect(() => {
-    if (gamePhase === 'selectingRow') {
+    if (gamePhase === 'selectingRow' || gamePhase === 'waitingForRow') {
       setShowRowSelection(true)
     } else {
       setShowRowSelection(false)
     }
 
     if (gamePhase === 'resolving') {
-      // Immediately resolve since we already showed the animation
+      // Old flow - immediately resolve
       resolveCurrentRound()
     }
   }, [gamePhase, resolveCurrentRound])
@@ -246,7 +249,9 @@ export default function GamePage() {
           <span className="text-xs px-2 py-1 bg-white/20 rounded-full shadow-[0_0_12px_rgba(34,211,238,0.3)]">
             {gamePhase === 'selecting' && 'Select a card'}
             {gamePhase === 'selectingRow' && 'Select a row to take'}
+            {gamePhase === 'waitingForRow' && 'Select a row to take'}
             {gamePhase === 'revealing' && 'Revealing cards...'}
+            {gamePhase === 'resolvingStep' && 'Placing cards...'}
             {gamePhase === 'resolving' && 'Resolving...'}
           </span>
         </div>
@@ -257,10 +262,10 @@ export default function GamePage() {
         {/* Board Area - Center/Left */}
         <div className="flex-1 flex items-start justify-center pt-4">
           <Board 
-            board={game.board} 
+            board={resolutionBoard || game.board} 
             className="w-full max-w-5xl"
-            animatingCardIndex={gamePhase === 'revealing' ? animatingCardIndex : -1}
-            animatingSelections={gamePhase === 'revealing' ? game.playerSelections : []}
+            animatingCardIndex={-1}
+            animatingSelections={[]}
           />
         </div>
         
@@ -285,14 +290,21 @@ export default function GamePage() {
             selections={game.playerSelections}
             playerNames={game.players.map(p => p.name)}
             board={game.board}
-            onCardAnimating={(index) => {
-              setAnimatingCardIndex(index)
-            }}
+            onCardAnimating={() => {}}
             onComplete={() => {
-              setAnimatingCardIndex(-1)
-              useGameStore.setState({ gamePhase: 'resolving' })
+              // Start step-by-step resolution
+              startResolution()
             }}
           />
+        )}
+        
+        {/* Resolution Progress Indicator */}
+        {gamePhase === 'resolvingStep' && game && (
+          <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg">
+            <span className="text-sm font-medium">
+              Placing card {resolutionIndex + 1} of {game.playerSelections.length}...
+            </span>
+          </div>
         )}
 
         {/* Row Selection Modal */}
@@ -304,7 +316,7 @@ export default function GamePage() {
               </h2>
               <p className="mb-4">Choose a row to take all its cards:</p>
               <div className="space-y-2">
-                {game.board.map((row, index) => (
+                {(resolutionBoard || game.board).map((row, index) => (
                   <button
                     key={index}
                     onClick={() => handleRowSelect(index)}

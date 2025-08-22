@@ -5,11 +5,13 @@ import {
   placeCard,
   takeRow,
   processCardPlacements,
+  processCardPlacementStep,
   getRowCards,
   isRowFull,
   type Board,
   type PlacementResult,
-  type CardPlacement
+  type CardPlacement,
+  type StepResult
 } from '../board'
 import { createCard, type Card } from '../card'
 
@@ -236,6 +238,156 @@ describe('Board functions', () => {
       ]
       
       expect(() => processCardPlacements(board, placements)).toThrow('Must choose a row for card too low')
+    })
+  })
+
+  describe('Step-by-step card placement', () => {
+    it('should process a single card placement step', () => {
+      const board = createBoard([
+        createCard(10),
+        createCard(20),
+        createCard(30),
+        createCard(40)
+      ])
+      
+      const result = processCardPlacementStep(board, {
+        card: createCard(25),
+        playerIndex: 0
+      })
+      
+      expect(result.needsRowSelection).toBe(false)
+      expect(result.board[1]).toHaveLength(2) // 20, 25
+      expect(result.takenCards).toHaveLength(0)
+      expect(result.rowIndex).toBe(1)
+    })
+    
+    it('should indicate when row selection is needed', () => {
+      const board = createBoard([
+        createCard(50),
+        createCard(60),
+        createCard(70),
+        createCard(80)
+      ])
+      
+      const result = processCardPlacementStep(board, {
+        card: createCard(5), // Too low
+        playerIndex: 0
+      })
+      
+      expect(result.needsRowSelection).toBe(true)
+      expect(result.board).toEqual(board) // Board unchanged
+      expect(result.takenCards).toHaveLength(0)
+      expect(result.rowIndex).toBe(-1)
+    })
+    
+    it('should apply row selection when provided', () => {
+      const board = createBoard([
+        createCard(50),
+        createCard(60),
+        createCard(70),
+        createCard(80)
+      ])
+      
+      const result = processCardPlacementStep(board, {
+        card: createCard(5),
+        playerIndex: 0,
+        chosenRow: 2 // Choose row 2
+      })
+      
+      expect(result.needsRowSelection).toBe(false)
+      expect(result.board[2]).toHaveLength(1) // Just 5
+      expect(result.board[2][0].number).toBe(5)
+      expect(result.takenCards).toHaveLength(1) // Took 70
+      expect(result.takenCards[0].number).toBe(70)
+      expect(result.rowIndex).toBe(2)
+    })
+    
+    it('should handle 6th card placement', () => {
+      const board: Board = [
+        [createCard(10), createCard(11), createCard(12), createCard(13), createCard(14)], // Full
+        [createCard(20)],
+        [createCard(30)],
+        [createCard(40)]
+      ]
+      
+      const result = processCardPlacementStep(board, {
+        card: createCard(15), // 6th card for row 0
+        playerIndex: 0
+      })
+      
+      expect(result.needsRowSelection).toBe(false)
+      expect(result.board[0]).toHaveLength(1) // Just 15
+      expect(result.board[0][0].number).toBe(15)
+      expect(result.takenCards).toHaveLength(5) // Took all 5 cards
+      expect(result.rowIndex).toBe(0)
+    })
+    
+    it('should process cards in correct order when called sequentially', () => {
+      let board = createBoard([
+        createCard(10),
+        createCard(20),
+        createCard(30),
+        createCard(40)
+      ])
+      
+      // Process card 15
+      let result = processCardPlacementStep(board, {
+        card: createCard(15),
+        playerIndex: 0
+      })
+      board = result.board
+      expect(board[0]).toHaveLength(2) // 10, 15
+      
+      // Process card 25 - should see updated board
+      result = processCardPlacementStep(board, {
+        card: createCard(25),
+        playerIndex: 1
+      })
+      board = result.board
+      expect(board[1]).toHaveLength(2) // 20, 25
+      
+      // Process card 16 - should go to row 0 after 15
+      result = processCardPlacementStep(board, {
+        card: createCard(16),
+        playerIndex: 2
+      })
+      board = result.board
+      expect(board[0]).toHaveLength(3) // 10, 15, 16
+    })
+    
+    it('should correctly handle board changes affecting subsequent placements', () => {
+      let board: Board = [
+        [createCard(10), createCard(11), createCard(12), createCard(13), createCard(14)], // Full
+        [createCard(20)],
+        [createCard(30)],
+        [createCard(40)]
+      ]
+      
+      // First card triggers 6th card rule
+      let result = processCardPlacementStep(board, {
+        card: createCard(15),
+        playerIndex: 0
+      })
+      board = result.board
+      expect(board[0]).toHaveLength(1) // Just 15
+      expect(result.takenCards).toHaveLength(5)
+      
+      // Next card 16 should go to row 0 (after 15), not trigger 6th card
+      result = processCardPlacementStep(board, {
+        card: createCard(16),
+        playerIndex: 1
+      })
+      board = result.board
+      expect(board[0]).toHaveLength(2) // 15, 16
+      expect(result.takenCards).toHaveLength(0)
+      
+      // Card 25 goes to row 1
+      result = processCardPlacementStep(board, {
+        card: createCard(25),
+        playerIndex: 2
+      })
+      board = result.board
+      expect(board[1]).toHaveLength(2) // 20, 25
     })
   })
 })
