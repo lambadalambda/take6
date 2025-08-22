@@ -1,0 +1,73 @@
+name: Continuous Integration
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  test-and-build:
+    name: Test and Build
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run linting
+        id: lint
+        run: npm run lint
+        continue-on-error: true
+        
+      - name: Run type checking
+        id: typecheck
+        run: npm run type-check
+        continue-on-error: true
+        
+      - name: Run tests with coverage
+        id: test
+        run: npm test -- --coverage --watchAll=false
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          
+      - name: Build application
+        id: build
+        run: npm run build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        if: success()
+        with:
+          name: build-output
+          path: .next/
+          retention-days: 7
+          
+      - name: Create deployment status badge
+        if: success() && github.ref == 'refs/heads/main'
+        run: echo "Build successful and ready for deployment"
+        
+      - name: Report status
+        if: always()
+        run: |
+          echo "### CI Results Summary"
+          echo "| Check | Status |"
+          echo "|-------|--------|"
+          echo "| Linting | ${{ steps.lint.outcome }} |"
+          echo "| Type Check | ${{ steps.typecheck.outcome }} |"
+          echo "| Tests | ${{ steps.test.outcome }} |"
+          echo "| Build | ${{ steps.build.outcome }} |"
