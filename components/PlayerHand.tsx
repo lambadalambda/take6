@@ -96,7 +96,7 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                 className={`
                   absolute transition-all duration-200 animate-breathe
                   ${isSelected ? '-translate-y-8' : 'hover:-translate-y-4'}
-                `}
+                group`}
                 style={{
                   ...cardStyle,
                   left: `calc(50% + ${(index - (totalCards - 1) / 2) * spacing}px)`,
@@ -105,7 +105,14 @@ export const PlayerHand: React.FC<PlayerHandProps> = ({
                   zIndex: isSelected ? 100 : cardStyle.zIndex
                 } as React.CSSProperties}
               >
-                <div className="scale-100">
+                <div className="relative scale-100">
+                  {/* Soft drop shadow below the card */}
+                  <div
+                    aria-hidden
+                    className={`absolute -bottom-2 left-1/2 -translate-x-1/2 w-24 h-4 rounded-full bg-black/40 blur-md transition-all ${
+                      isSelected ? 'opacity-70 scale-110' : 'opacity-40 group-hover:opacity-60'
+                    }`}
+                  />
                   <Card
                     card={card}
                     onClick={onCardSelect ? () => handleCardClick(card) : undefined}
