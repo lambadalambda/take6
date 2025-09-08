@@ -49,7 +49,7 @@ jobs:
         run: npm run build
         
       - name: Comment PR with results
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         if: always() && github.event_name == 'pull_request' && matrix.node-version == '20.x'
         with:
           script: |
