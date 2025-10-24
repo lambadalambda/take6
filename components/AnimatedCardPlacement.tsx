@@ -26,7 +26,6 @@ export const AnimatedCardPlacement: React.FC<AnimatedCardPlacementProps> = ({
   const [cardPhase, setCardPhase] = useState<CardPhase>('hidden')
   const boardRef = useRef<DOMRect | null>(null)
   
-  console.log('AnimatedCardPlacement render:', { cards, currentCardIndex, cardPhase })
 
   useEffect(() => {
     // Get board position for calculating target coordinates

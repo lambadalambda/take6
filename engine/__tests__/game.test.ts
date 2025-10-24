@@ -8,7 +8,6 @@ import {
   getWinner,
   getPlayerByIndex,
   getAllPlayersReady,
-  needsRowSelection,
   setChosenRowForPlayer,
   type Game,
   type GameConfig
